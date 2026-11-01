@@ -1,5 +1,5 @@
 
-const User = require("../models/User");
+const User = require("../models/user");
 
 // GET /api/admin/dashboard
 const getDashboard = async (req, res) => {
