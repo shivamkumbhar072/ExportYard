@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import {
   Send,
   CheckCircle2,
@@ -10,6 +10,9 @@ import {
   Check,
   X,
 } from "lucide-react";
+
+// adjust this path to match where your AuthContext file lives
+import { useAuth } from "../context/AuthContext";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -347,6 +350,9 @@ function CountryCodeSelect({ value, onChange }) {
 }
 
 export default function Enquiry() {
+  const { token, isLoggedIn, authLoading, logout } = useAuth();
+  const location = useLocation();
+
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -370,13 +376,22 @@ export default function Enquiry() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!token) {
+      setError("Please log in to submit an enquiry.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
       const response = await fetch(`${API_URL}/api/enquiries`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           ...form,
           quantity: Number(form.quantity),
@@ -394,6 +409,12 @@ export default function Enquiry() {
         );
       }
 
+      // token expired / invalid -> log out so the user can sign in again
+      if (response.status === 401) {
+        logout();
+        throw new Error("Your session has expired. Please log in again.");
+      }
+
       if (!response.ok || data.success === false) {
         throw new Error(data.message || "Unable to submit your enquiry.");
       }
@@ -409,6 +430,15 @@ export default function Enquiry() {
       setLoading(false);
     }
   };
+
+  // wait until the saved session has been verified
+  if (authLoading) return null; // or show a spinner
+
+  // only logged-in users can send an enquiry
+  // (adjust "/login" to your actual login route)
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0a1628] px-4 pb-16 pt-24 text-white sm:px-6">

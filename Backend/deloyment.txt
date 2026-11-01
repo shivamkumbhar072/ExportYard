@@ -1,0 +1,70 @@
+1.
+pm2 delete all
+pm2 save --force
+sudo rm -rf /var/www/ExportYard
+sudo rm -f /etc/nginx/sites-enabled/* /etc/nginx/sites-available/*
+sudo mkdir -p /var/www
+sudo chown ubuntu:ubuntu /var/www
+cd /var/www
+git clone https://github.com/shivamkumbhar072/ExportYard.git
+cd Backend
+npm install
+touch .env
+chmod 600 .env
+nano .env
+
+2.
+pm2 start server.js --name exportyard-api
+pm2 save
+cd ../Frontend
+npm install
+nano .env
+
+add-->>VITE_API_URL=https://exportyard.com
+
+
+3.
+npm run build
+
+
+4.
+
+sudo tee /etc/nginx/sites-available/exportyard > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name exportyard.com www.exportyard.com;
+
+    root /var/www/ExportYard/Frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    client_max_body_size 20M;
+}
+EOF
+sudo ln -s /etc/nginx/sites-available/exportyard /etc/nginx/sites-enabled/exportyard
+sudo nginx -t && sudo systemctl reload nginx
+
+
+
+
+5.
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d exportyard.com -d www.exportyard.com
+
+
+
+
+6.
+pm2 status
+sudo systemctl status nginx
