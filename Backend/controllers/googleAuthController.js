@@ -2,6 +2,7 @@
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const sendWelcomeEmail = require("../utils/sendWelcomeEmail");
 
 const googleClient = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID
@@ -47,9 +48,9 @@ const googleAuth = async (req, res) => {
       picture,
     } = payload;
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    // Find user by Google ID or verified email
+    // Find existing account
     let user = await User.findOne({
       $or: [
         { googleId },
@@ -57,8 +58,10 @@ const googleAuth = async (req, res) => {
       ],
     });
 
+    let isNewUser = false;
+
     if (user) {
-      // Link Google account to an existing email account
+      // Link Google to an existing account
       if (!user.googleId) {
         user.googleId = googleId;
       }
@@ -68,8 +71,9 @@ const googleAuth = async (req, res) => {
       }
 
       await user.save();
+
     } else {
-      // Create new Google user
+      // Create a new Google account
       user = await User.create({
         name: name || normalizedEmail.split("@")[0],
         email: normalizedEmail,
@@ -77,11 +81,35 @@ const googleAuth = async (req, res) => {
         authProvider: "google",
         profilePicture: picture || "",
       });
+
+      isNewUser = true;
     }
 
-    // Generate JWT using existing login convention
+    // Send welcome email only to newly created accounts
+    if (isNewUser) {
+      try {
+        await sendWelcomeEmail(user);
+
+        console.log(
+          "Google registration welcome email sent:",
+          user.email
+        );
+
+      } catch (emailError) {
+        console.error(
+          "Google welcome email failed:",
+          emailError.message
+        );
+      }
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing from .env");
+    }
+
+    // Generate JWT
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id.toString() },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -100,7 +128,7 @@ const googleAuth = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Google Auth Error:", error);
+    console.error("Google Auth Error:", error.message);
 
     if (error.code === 11000) {
       return res.status(409).json({

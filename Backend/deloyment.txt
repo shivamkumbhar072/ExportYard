@@ -1,34 +1,48 @@
-1.
+ExportYard – Complete deployment from scratch
+1. Delete old deployment and clone repository
+Destructive – deletes existing deployment
 pm2 delete all
 pm2 save --force
+
 sudo rm -rf /var/www/ExportYard
-sudo rm -f /etc/nginx/sites-enabled/* /etc/nginx/sites-available/*
+sudo rm -f /etc/nginx/sites-enabled/exportyard
+sudo rm -f /etc/nginx/sites-available/exportyard
+
 sudo mkdir -p /var/www
 sudo chown ubuntu:ubuntu /var/www
+
 cd /var/www
 git clone https://github.com/shivamkumbhar072/ExportYard.git
-cd Backend
+
+cd /var/www/ExportYard
+
+
+2. Configure and start backend + frontend
+cd /var/www/ExportYard/Backend
+
 npm install
-touch .env
-chmod 600 .env
 nano .env
 
-2.
+
+Paste your actual production environment variables and save.
+
+Then execute:
+chmod 600 .env
+
 pm2 start server.js --name exportyard-api
 pm2 save
-cd ../Frontend
+
+cd /var/www/ExportYard/Frontend
+
 npm install
-nano .env
 
-add-->>VITE_API_URL=https://exportyard.com
+echo "VITE_API_URL=https://exportyard.com" > .env
 
-
-3.
 npm run build
 
 
-4.
-
+Keep a secure backup of your backend .env file. Never commit it to GitHub.
+3. Configure Nginx + SSL + final verification
 sudo tee /etc/nginx/sites-available/exportyard > /dev/null <<'EOF'
 server {
     listen 80;
@@ -52,19 +66,48 @@ server {
     client_max_body_size 20M;
 }
 EOF
+
 sudo ln -s /etc/nginx/sites-available/exportyard /etc/nginx/sites-enabled/exportyard
+
 sudo nginx -t && sudo systemctl reload nginx
 
-
-
-
-5.
 sudo apt install certbot python3-certbot-nginx -y
+
 sudo certbot --nginx -d exportyard.com -d www.exportyard.com
 
-
-
-
-6.
+pm2 save
 pm2 status
 sudo systemctl status nginx
+curl -I https://exportyard.com
+
+
+SSL note: If Certbot says the certificate already exists, select 1 to reinstall it. If it is already correctly installed, you can skip Certbot.
+
+Important: Keep these details ready
+Item	Value
+EC2 project path	/var/www/ExportYard
+Backend directory	/var/www/ExportYard/Backend
+Frontend directory	/var/www/ExportYard/Frontend
+Backend process	exportyard-api
+Backend port	5000
+Frontend build	Frontend/dist
+Domain	exportyard.com
+API URL	https://exportyard.com
+
+Future updates (without deleting everything)
+When you only change code and push it to GitHub, you don't need a fresh deployment.
+
+Use this shorter command:
+cd /var/www/ExportYard
+
+git pull origin main
+
+cd Backend
+npm install
+pm2 restart exportyard-api --update-env
+
+cd ../Frontend
+npm install
+npm run build
+
+sudo systemctl reload nginx

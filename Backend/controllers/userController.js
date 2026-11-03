@@ -1,6 +1,7 @@
 
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const sendWelcomeEmail = require("../utils/sendWelcomeEmail");
 
 // REGISTER USER
 const registerUser = async (req, res) => {
@@ -48,11 +49,23 @@ const registerUser = async (req, res) => {
       });
     }
 
+    // Create new user
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
       password,
     });
+
+    // Send welcome email only to newly registered users
+    try {
+      await sendWelcomeEmail(user);
+      console.log("Welcome email sent:", user.email);
+    } catch (emailError) {
+      console.error(
+        "Welcome email failed:",
+        emailError.message
+      );
+    }
 
     return res.status(201).json({
       success: true,
@@ -65,6 +78,7 @@ const registerUser = async (req, res) => {
         createdAt: user.createdAt,
       },
     });
+
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({
@@ -131,6 +145,7 @@ const loginUser = async (req, res) => {
         role: user.role,
       },
     });
+
   } catch (error) {
     console.error("Login error:", error.message);
 
@@ -141,7 +156,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-
+// GET CURRENT USER
 const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
@@ -153,7 +168,7 @@ const getCurrentUser = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user: {
         id: user._id,
@@ -162,14 +177,17 @@ const getCurrentUser = async (req, res) => {
         role: user.role,
       },
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.error("Get current user error:", error.message);
+
+    return res.status(500).json({
       success: false,
       message: "Unable to verify user",
     });
   }
 };
-// EXPORT BOTH FUNCTIONS
+
 module.exports = {
   registerUser,
   loginUser,
