@@ -59,9 +59,6 @@ const startServer = async () => {
     // Connect MongoDB
     await connectDB();
 
-    console.log("MongoDB connected successfully!");
-    console.log(`Connected database: ${mongoose.connection.name}`);
-
     // Verify Zoho SMTP
     try {
       await transporter.verify();
