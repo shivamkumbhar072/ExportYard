@@ -1,4 +1,3 @@
-
 import {
   Routes,
   Route,
@@ -13,6 +12,8 @@ import Footer from "./Homepage/Footer.jsx";
 
 import Login from "./components/Login.jsx";
 import Register from "./components/Register.jsx";
+import ForgotPassword from "./components/ForgotPassword.jsx";
+import ResetPassword from "./components/ResetPassword.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
 import AdminLayout from "./admin/AdminLayout.jsx";
@@ -68,9 +69,8 @@ export default function App() {
 
         {/* Public Pages */}
         <Route path="/" element={<HomepageLayout />} />
-         <Route path="/terms" element={<Terms />} />
-         <Route path="/privacy-policy" element={<Privacy />} />
-        
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy-policy" element={<Privacy />} />
 
         {/* Protected Pages */}
         <Route element={<ProtectedRoute />}>
@@ -100,6 +100,21 @@ export default function App() {
             )
           }
         />
+
+        {/* Forgot Password */}
+        <Route
+          path="/forgot-password"
+          element={
+            isLoggedIn ? (
+              <Navigate to="/" replace />
+            ) : (
+              <ForgotPassword />
+            )
+          }
+        />
+
+        {/* Reset Password (opened from the email link) */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Admin Pages */}
         <Route path="/admin" element={<AdminLayout />}>

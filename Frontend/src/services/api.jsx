@@ -1,4 +1,3 @@
-
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
 ).replace(/\/$/, "");
@@ -40,6 +39,18 @@ export function registerUser(userData) {
 
 export function loginUser(userData) {
   return sendRequest("/api/users/login", userData);
+}
+
+export function sendSignupOtp(data) {
+  return sendRequest("/api/users/send-signup-otp", data);
+}
+
+export function forgotPassword(data) {
+  return sendRequest("/api/users/forgot-password", data);
+}
+
+export function resetPassword(token, data) {
+  return sendRequest(`/api/users/reset-password/${token}`, data);
 }
 
 export { API_URL };

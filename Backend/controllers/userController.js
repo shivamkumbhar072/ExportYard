@@ -1,24 +1,27 @@
-
 const User = require("../models/user");
+const Otp = require("../models/otp");
+const hash = require("../utils/hash");
 const jwt = require("jsonwebtoken");
 const sendWelcomeEmail = require("../utils/sendWelcomeEmail");
 
-// REGISTER USER
+// REGISTER USER (requires a valid signup OTP)
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp } = req.body;
 
     if (
       typeof name !== "string" ||
       typeof email !== "string" ||
       typeof password !== "string" ||
+      typeof otp !== "string" ||
       !name.trim() ||
       !email.trim() ||
-      !password
+      !password ||
+      !otp.trim()
     ) {
       return res.status(400).json({
         success: false,
-        message: "Name, email and password are required",
+        message: "Name, email, password and OTP are required",
       });
     }
 
@@ -48,6 +51,35 @@ const registerUser = async (req, res) => {
         message: "Email is already registered",
       });
     }
+
+    // Verify OTP
+    const record = await Otp.findOne({ email: normalizedEmail });
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired. Please request a new one",
+      });
+    }
+
+    if (record.attempts >= 5) {
+      return res.status(429).json({
+        success: false,
+        message: "Too many attempts. Please request a new OTP",
+      });
+    }
+
+    if (record.otpHash !== hash(otp.trim())) {
+      record.attempts += 1;
+      await record.save();
+
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    await Otp.deleteOne({ _id: record._id });
 
     // Create new user
     const user = await User.create({
