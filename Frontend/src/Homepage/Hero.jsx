@@ -6,7 +6,7 @@ import {
   DESTINATIONS,
   INDIA_DOTS,
   WORLD_DOTS,
-} from "./worldMapData";
+} from "Worldmapdata.jsx"
 
 const CYCLE = 12; // seconds for one full route animation
 const STAGGER = 1.3; // seconds between routes starting
@@ -16,7 +16,8 @@ function routePath(a, b) {
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2;
   const dx = b.x - a.x;
-  const dy = b.y - a.y;
+  const dy = b.y - a.y;r
+  
   const dist = Math.hypot(dx, dy) || 1;
   let nx = -dy / dist;
   let ny = dx / dist;
