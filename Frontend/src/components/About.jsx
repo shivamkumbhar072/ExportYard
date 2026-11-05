@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const services = [
@@ -36,21 +36,56 @@ const steps = [
 ];
 
 const About = () => {
+  // SEO: set page title and meta description on mount
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "About ExportYard | Export from India, Handled End to End";
+
+    let meta = document.querySelector('meta[name="description"]');
+    let created = false;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+      created = true;
+    }
+    const previousDescription = meta.getAttribute("content");
+    meta.setAttribute(
+      "content",
+      "ExportYard connects overseas buyers with products made in India. We source, document and ship — one team from enquiry to delivery."
+    );
+
+    return () => {
+      document.title = previousTitle;
+      if (created) {
+        meta.remove();
+      } else if (previousDescription !== null) {
+        meta.setAttribute("content", previousDescription);
+      }
+    };
+  }, []);
+
   return (
     <main className="ab-page">
       <style>{css}</style>
 
       {/* Intro */}
-      <section className="ab-hero">
+      <section className="ab-hero" aria-labelledby="ab-hero-title">
         <div className="ab-wrap">
-          <h1 className="ab-title">Export from India, handled end to end.</h1>
+          <h1 id="ab-hero-title" className="ab-title">
+            Export from India, handled end to end.
+          </h1>
           <p className="ab-lead">
             ExportYard connects overseas buyers with products made in India. We
             source, document and ship, so you can deal with one team from
             enquiry to delivery.
           </p>
           <div className="ab-actions">
-            <Link to="/enquiry" className="ab-btn ab-btn-solid">
+            <Link
+              to="/enquiry"
+              className="ab-btn ab-btn-solid"
+              aria-label="Request an export enquiry"
+            >
               Request an enquiry
             </Link>
           </div>
@@ -58,9 +93,11 @@ const About = () => {
       </section>
 
       {/* What we do */}
-      <section className="ab-section">
+      <section className="ab-section" aria-labelledby="ab-services-title">
         <div className="ab-wrap">
-          <h2 className="ab-h2">What we do</h2>
+          <h2 id="ab-services-title" className="ab-h2">
+            What we do
+          </h2>
           <div className="ab-grid">
             {services.map((s) => (
               <div className="ab-card" key={s.title}>
@@ -73,9 +110,11 @@ const About = () => {
       </section>
 
       {/* Products */}
-      <section className="ab-section">
+      <section className="ab-section" aria-labelledby="ab-products-title">
         <div className="ab-wrap">
-          <h2 className="ab-h2">What we export</h2>
+          <h2 id="ab-products-title" className="ab-h2">
+            What we export
+          </h2>
           <div className="ab-products">
             <div className="ab-product">
               <h3>Available now</h3>
@@ -96,9 +135,11 @@ const About = () => {
       </section>
 
       {/* Process: a real sequence, so numbering is meaningful */}
-      <section className="ab-section">
+      <section className="ab-section" aria-labelledby="ab-process-title">
         <div className="ab-wrap">
-          <h2 className="ab-h2">How it works</h2>
+          <h2 id="ab-process-title" className="ab-h2">
+            How it works
+          </h2>
           <ol className="ab-steps">
             {steps.map((s, i) => (
               <li className="ab-step" key={s.title}>
@@ -116,15 +157,22 @@ const About = () => {
       </section>
 
       {/* Closing call to action */}
-      <section className="ab-section ab-last">
+      <section
+        className="ab-section ab-last"
+        aria-labelledby="ab-cta-title"
+      >
         <div className="ab-wrap">
           <div className="ab-cta">
-            <h2>Have a product in mind?</h2>
+            <h2 id="ab-cta-title">Have a product in mind?</h2>
             <p>
               Tell us what you want to import and where it needs to go. We will
               get back to you with a quote.
             </p>
-            <Link to="/enquiry" className="ab-btn ab-btn-solid">
+            <Link
+              to="/enquiry"
+              className="ab-btn ab-btn-solid"
+              aria-label="Request an export enquiry"
+            >
               Request an enquiry
             </Link>
           </div>

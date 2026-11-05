@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 const LAST_UPDATED = "31 October 2026";
 const COMPANY = "ExportYard";
@@ -205,6 +205,51 @@ const ListItem = ({ item }) =>
   );
 
 const Privacy = () => {
+  // SEO: set page title, meta description and canonical on mount
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = `Privacy Policy | ${COMPANY}`;
+
+    let meta = document.querySelector('meta[name="description"]');
+    let created = false;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+      created = true;
+    }
+    const previousDescription = meta.getAttribute("content");
+    meta.setAttribute(
+      "content",
+      `${COMPANY}'s Privacy Policy: what personal data we collect, how we use it, how Google sign-in data is handled, and how you can access or delete your information.`
+    );
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    let canonicalCreated = false;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+      canonicalCreated = true;
+    }
+    const previousCanonical = canonical.getAttribute("href");
+    canonical.setAttribute("href", `${SITE_URL}/privacy`);
+
+    return () => {
+      document.title = previousTitle;
+      if (created) {
+        meta.remove();
+      } else if (previousDescription !== null) {
+        meta.setAttribute("content", previousDescription);
+      }
+      if (canonicalCreated) {
+        canonical.remove();
+      } else if (previousCanonical !== null) {
+        canonical.setAttribute("href", previousCanonical);
+      }
+    };
+  }, []);
+
   return (
     <main className="pv-page">
       <style>{css}</style>
@@ -219,10 +264,11 @@ const Privacy = () => {
             it, and you can ask us to delete it at any time.
           </p>
           <p className="pv-meta">
-            <a href={SITE_URL} className="pv-link">
+            <a href={SITE_URL} className="pv-link" aria-label={`Visit ${SITE}`}>
               {SITE}
             </a>
-            &nbsp;&nbsp;|&nbsp;&nbsp;Last updated {LAST_UPDATED}
+            &nbsp;&nbsp;|&nbsp;&nbsp;Last updated{" "}
+            <time dateTime="2026-10-31">{LAST_UPDATED}</time>
           </p>
         </div>
       </header>
@@ -244,12 +290,13 @@ const Privacy = () => {
             key={s.id}
             id={s.id}
             className={`pv-row${s.highlight ? " pv-row-google" : ""}`}
+            aria-labelledby={`${s.id}-title`}
           >
             <div className="pv-row-head">
               <span className="pv-num" aria-hidden="true">
                 {i + 1}
               </span>
-              <h2>{s.title}</h2>
+              <h2 id={`${s.id}-title`}>{s.title}</h2>
             </div>
 
             <div className="pv-row-body">
@@ -315,9 +362,9 @@ const Privacy = () => {
         ))}
 
         {/* Contact */}
-        <section className="pv-contact">
+        <section className="pv-contact" aria-labelledby="pv-contact-title">
           <div>
-            <h2>Questions about your privacy?</h2>
+            <h2 id="pv-contact-title">Questions about your privacy?</h2>
             <p>
               Write to us and a real person will reply. {COMPANY}, {LOCATION}.
             </p>

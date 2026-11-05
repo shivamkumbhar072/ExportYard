@@ -29,6 +29,52 @@ export default function Login() {
   const [googleRef, googleWidth] = useFitWidth(340);
   const errorRef = useRef(null);
 
+  // SEO: set page title and meta description, with robots noindex for auth pages
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "Log In | ExportYard";
+
+    let description = document.querySelector('meta[name="description"]');
+    let createdDescription = false;
+    if (!description) {
+      description = document.createElement("meta");
+      description.setAttribute("name", "description");
+      document.head.appendChild(description);
+      createdDescription = true;
+    }
+    const previousDescription = description.getAttribute("content");
+    description.setAttribute(
+      "content",
+      "Log in to your ExportYard account to manage export enquiries, orders and shipping documents."
+    );
+
+    // Auth pages should not be indexed by search engines
+    let robots = document.querySelector('meta[name="robots"]');
+    let createdRobots = false;
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      document.head.appendChild(robots);
+      createdRobots = true;
+    }
+    const previousRobots = robots.getAttribute("content");
+    robots.setAttribute("content", "noindex, nofollow");
+
+    return () => {
+      document.title = previousTitle;
+      if (createdDescription) {
+        description.remove();
+      } else if (previousDescription !== null) {
+        description.setAttribute("content", previousDescription);
+      }
+      if (createdRobots) {
+        robots.remove();
+      } else if (previousRobots !== null) {
+        robots.setAttribute("content", previousRobots);
+      }
+    };
+  }, []);
+
   // Clear server error when user edits
   useEffect(() => {
     if (message) setMessage("");
