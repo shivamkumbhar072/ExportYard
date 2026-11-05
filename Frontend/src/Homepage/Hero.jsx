@@ -16,7 +16,7 @@ function routePath(a, b) {
   const mx = (a.x + b.x) / 2;
   const my = (a.y + b.y) / 2;
   const dx = b.x - a.x;
-  const dy = b.y - a.y;r
+  const dy = b.y - a.y;
   
   const dist = Math.hypot(dx, dy) || 1;
   let nx = -dy / dist;
