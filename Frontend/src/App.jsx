@@ -24,6 +24,7 @@ import AdminEnquiries from "./admin/AdminEnquiries.jsx";
 import Enquiry from "./pages/Enquiry.jsx";
 import Terms from "./components/Terms.jsx";
 import Privacy from "./components/Privacy.jsx";
+import About from "./components/About.jsx";
 
 // Shared layout
 function MainLayout() {
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/" element={<HomepageLayout />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy-policy" element={<Privacy />} />
+        <Route path="/about" element={<About />} />
 
         {/* Protected Pages */}
         <Route element={<ProtectedRoute />}>

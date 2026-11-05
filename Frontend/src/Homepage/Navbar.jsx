@@ -1,8 +1,7 @@
-
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X, LogOut, Check } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const SCROLL_OFFSET = 40;
@@ -89,9 +88,10 @@ const Navbar = () => {
 
   return (
     <>
-      <header className={`nv-header${scrolled ? " is-scrolled" : ""}`}>
-        <style>{css}</style>
+      {/* Styles are injected once here and apply to the portals as well */}
+      <style>{css}</style>
 
+      <header className={`nv-header${scrolled ? " is-scrolled" : ""}`}>
         <div className="nv-bar">
           {/* Logo */}
           <Link
@@ -105,6 +105,15 @@ const Navbar = () => {
 
           {/* Desktop navigation */}
           <div className="nv-desktop">
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `nv-link nv-about${isActive ? " is-active" : ""}`
+              }
+            >
+              ABOUT
+            </NavLink>
+
             {isLoggedIn ? (
               <>
                 <span className="nv-user">Hello, {firstName}</span>
@@ -157,6 +166,16 @@ const Navbar = () => {
         {/* Mobile navigation */}
         {navOpen && (
           <nav id="nv-mobile" className="nv-mobile" aria-label="Mobile">
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `nv-m-link${isActive ? " is-active" : ""}`
+              }
+              onClick={close}
+            >
+              ABOUT
+            </NavLink>
+
             {isLoggedIn ? (
               <>
                 <span className="nv-user nv-mobile-user">
@@ -185,22 +204,18 @@ const Navbar = () => {
 
             {/* Admin panel button on mobile */}
             {isAdmin && (
-              <Link
-                to="/admin"
-                className="nv-m-link"
-                onClick={close}
-              >
+              <Link to="/admin" className="nv-m-link" onClick={close}>
                 ADMIN PANEL
               </Link>
             )}
 
-            <a
-              href="/enquiry"
+            <Link
+              to="/enquiry"
               className="nv-link nv-cta nv-m-cta"
               onClick={close}
             >
               REQUEST ENQUIRY
-            </a>
+            </Link>
           </nav>
         )}
       </header>
@@ -208,12 +223,7 @@ const Navbar = () => {
       {/* Logout confirmation dialog */}
       {confirmOpen &&
         createPortal(
-          <div
-            className="nv-overlay"
-            onClick={() => setConfirmOpen(false)}
-          >
-            <style>{css}</style>
-
+          <div className="nv-overlay" onClick={() => setConfirmOpen(false)}>
             <div
               className="nv-dialog"
               role="dialog"
@@ -259,8 +269,6 @@ const Navbar = () => {
       {toast &&
         createPortal(
           <div className="nv-toast" role="status" aria-live="polite">
-            <style>{css}</style>
-
             <span className="nv-toast-icon">
               <Check size={16} />
             </span>
@@ -379,6 +387,36 @@ const css = `
   text-shadow: 0 1px 8px rgba(8,26,48,.45);
 }
 
+/* ---------- About link ---------- */
+.nv-about {
+  position: relative;
+  padding-left: .9rem;
+  padding-right: .9rem;
+}
+
+.nv-about:hover {
+  background: transparent;
+}
+
+.nv-about::after {
+  content: "";
+  position: absolute;
+  left: .9rem;
+  right: .9rem;
+  bottom: .3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: #38bdd0;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform .25s ease;
+}
+
+.nv-about:hover::after,
+.nv-about.is-active::after {
+  transform: scaleX(1);
+}
+
 .nv-toggle {
   display: inline-flex;
   align-items: center;
@@ -415,6 +453,10 @@ const css = `
   font-weight: 600;
   letter-spacing: .08em;
   border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.nv-m-link.is-active {
+  color: #38bdd0;
 }
 
 .nv-m-button {
@@ -599,6 +641,7 @@ const css = `
 @media (prefers-reduced-motion: reduce) {
   .nv-header,
   .nv-link,
+  .nv-about::after,
   .nv-overlay,
   .nv-dialog,
   .nv-toast {
