@@ -6,7 +6,7 @@ import {
   DESTINATIONS,
   INDIA_DOTS,
   WORLD_DOTS,
-} from "Worldmapdata.jsx"
+} from "./Worldmapdata.jsx"
 
 const CYCLE = 12; // seconds for one full route animation
 const STAGGER = 1.3; // seconds between routes starting
