@@ -1,359 +1,496 @@
-import React from 'react'
+import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
+import {
+  MAP,
+  MUMBAI,
+  DESTINATIONS,
+  INDIA_DOTS,
+  WORLD_DOTS,
+} from "./worldMapData";
 
-/* ---------- data ---------- */
-const stacks = [4, 5, 5, 5, 5, 4, 4, 3, 3, 2]
-const palette = ['#c8412f', '#2f6f8f', '#e0a23a', '#3c8c6e', '#d9d4c7', '#5b6fa8', '#a8452f']
-const boxes = stacks.flatMap((h, c) =>
-  Array.from({ length: h }, (_, r) => ({ c, r, color: palette[(c * 3 + r * 5 + (c % 2)) % palette.length] }))
-)
-const WAVE = 'M0 40 Q150 26 300 40 T600 40 T900 40 T1200 40'
+const CYCLE = 12; // seconds for one full route animation
+const STAGGER = 1.3; // seconds between routes starting
 
-/* ---------- pieces ---------- */
-const Ship = () => (
-  <svg viewBox="0 0 520 190" className="ey-svg" xmlns="http://www.w3.org/2000/svg">
-    {boxes.map(({ c, r, color }) => {
-      const x = 150 + c * 34
-      const y = 104 - r * 15
-      return (
-        <g key={`${c}-${r}`}>
-          <rect x={x} y={y} width="32" height="14" fill={color} />
-          <rect x={x} y={y} width="32" height="14" fill="url(#ey-corr)" />
-          <rect x={x} y={y} width="32" height="2" fill="#fff" opacity=".2" />
-        </g>
-      )
-    })}
+// Curved route from Mumbai to a destination (quadratic curve bowing upward)
+function routePath(a, b) {
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  let nx = -dy / dist;
+  let ny = dx / dist;
+  if (ny > 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const cx = mx + nx * dist * 0.25;
+  const cy = my + ny * dist * 0.25;
+  return `M${a.x} ${a.y} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x} ${b.y}`;
+}
 
-    {/* bridge tower */}
-    <rect x="36" y="60" width="80" height="6" fill="#cfd6db" />
-    <rect x="40" y="64" width="72" height="42" fill="#e8ecef" />
-    <rect x="46" y="38" width="56" height="22" fill="#eef1f3" />
-    <rect x="50" y="44" width="48" height="8" fill="url(#ey-glass)" />
-    <rect x="44" y="70" width="60" height="5" fill="url(#ey-glass)" />
-    <rect x="44" y="84" width="60" height="5" fill="url(#ey-glass)" />
-    <rect x="72" y="14" width="2.5" height="24" fill="#4a5a66" />
-    <rect x="66" y="12" width="14" height="3" fill="#4a5a66" />
-    {/* funnel */}
-    <rect x="118" y="52" width="22" height="54" fill="#c8412f" />
-    <rect x="118" y="52" width="22" height="8" fill="#14202a" />
+const pct = (v, total) => `${((v / total) * 100).toFixed(2)}%`;
 
-    {/* forecastle */}
-    <rect x="490" y="92" width="22" height="14" fill="#dfe5e8" />
-    <rect x="494" y="96" width="14" height="3" fill="url(#ey-glass)" />
-    <rect x="499" y="70" width="2" height="22" fill="#4a5a66" />
+const Hero = () => {
+  const routes = useMemo(
+    () =>
+      DESTINATIONS.map((d, i) => ({
+        ...d,
+        path: routePath(MUMBAI, d),
+        delay: `${(i * STAGGER).toFixed(2)}s`,
+      })),
+    []
+  );
 
-    {/* warm window lights */}
-    <g className="ey-lit">
-      <rect x="50" y="44" width="48" height="8" fill="#ffd98a" />
-      <rect x="44" y="70" width="60" height="5" fill="#ffd98a" />
-      <rect x="44" y="84" width="60" height="5" fill="#ffd98a" />
-      <rect x="494" y="96" width="14" height="3" fill="#ffd98a" />
-      <circle cx="73" cy="11" r="3" fill="#fff4c4" />
-      <circle cx="500" cy="68" r="2.5" fill="#fff4c4" />
-    </g>
+  return (
+    <section className="ey-hero" aria-label="ExportYard">
+      <style>{css}</style>
 
-    {/* hull */}
-    <path d="M6 106 H514 L470 172 H46 Z" fill="url(#ey-hull)" />
-    <rect x="6" y="104" width="508" height="4" fill="#2a4256" />
-    <path d="M32 150 H485 L470 172 H46 Z" fill="#b83a2a" />
-    <text x="215" y="134" fill="#f4f1ea" fontSize="15" fontWeight="700" letterSpacing="3" fontFamily="inherit">
-      EXPORTYARD
-    </text>
-    {Array.from({ length: 14 }).map((_, i) => (
-      <circle key={i} className="ey-pl" cx={70 + i * 30} cy="117" r="1.6" fill="#ffd98a" />
-    ))}
-  </svg>
-)
+      <div className="ey-inner">
+        {/* Copy */}
+        <div className="ey-copy">
+          <h1>From Mumbai to ports around the world.</h1>
+          <p>
+            ExportYard ships bottled mineral water from Mumbai in full-container
+            loads, with the export documents handled for you.
+          </p>
 
-const Wave = ({ fill, stroke }) => (
-  <svg viewBox="0 0 1200 200" preserveAspectRatio="none" className="ey-seg">
-    <path d={`${WAVE} V200 H0 Z`} fill={fill} />
-    {stroke && <path d={WAVE} fill="none" stroke={stroke} strokeWidth="2" vectorEffect="non-scaling-stroke" />}
-  </svg>
-)
-
-const Defs = () => (
-  <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="ey-hull" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#1f3a4e" />
-        <stop offset="1" stopColor="#0b1a25" />
-      </linearGradient>
-      <linearGradient id="ey-glass" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#9bd6ea" />
-        <stop offset="1" stopColor="#2a5d78" />
-      </linearGradient>
-      <linearGradient id="ey-mid" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="rgba(40,120,150,.85)" />
-        <stop offset="1" stopColor="rgba(8,52,74,.97)" />
-      </linearGradient>
-      <linearGradient id="ey-front" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#0d4864" />
-        <stop offset="1" stopColor="#04202e" />
-      </linearGradient>
-      <pattern id="ey-corr" width="3" height="14" patternUnits="userSpaceOnUse">
-        <rect width="1" height="14" fill="#000" opacity=".16" />
-      </pattern>
-    </defs>
-  </svg>
-)
-
-/* ---------- hero: sailing ship (pure CSS animation, no scroll or pointer JS) ---------- */
-const Intro = () => (
-  <section className="ey-hero" aria-label="ExportYard">
-    <Defs />
-
-    <div className="ey-scene" aria-hidden="true">
-      <div className="ey-sky" />
-      <div className="ey-sun" />
-      <div className="ey-scrim" />
-      <div className="ey-cloud c1" />
-      <div className="ey-cloud c2" />
-      <div className="ey-cloud c3" />
-
-      <div className="ey-gull g1"><svg viewBox="0 0 28 10"><path d="M1 8 Q7 0 14 7 Q21 0 27 8" /></svg></div>
-      <div className="ey-gull g2"><svg viewBox="0 0 28 10"><path d="M1 8 Q7 0 14 7 Q21 0 27 8" /></svg></div>
-
-      <svg className="ey-port" viewBox="0 0 300 60">
-        <g fill="#27495f" opacity=".6">
-          <rect x="150" y="46" width="22" height="14" /><rect x="174" y="46" width="22" height="14" />
-          <rect x="162" y="32" width="22" height="14" /><rect x="198" y="50" width="30" height="10" />
-          <rect x="232" y="44" width="22" height="16" /><rect x="256" y="50" width="30" height="10" />
-        </g>
-        <g stroke="#27495f" strokeWidth="2" fill="none" opacity=".7">
-          <path d="M40 60 L46 14 H120 M120 14 L124 22 M96 60 L102 14" />
-          <path d="M205 60 L210 24 H270 M270 24 L273 31 M246 60 L250 24" />
-        </g>
-      </svg>
-
-      <div className="ey-sea" />
-      <div className="ey-glitter" />
-
-      {/* ship */}
-      <div className="ey-lane ey-lane-ship">
-        <div className="ey-enter">
-          <div className="ey-hullbox">
-            <div className="ey-bob">
-              <Ship />
-              <span className="ey-smoke" />
-              <span className="ey-smoke s2" />
-              <span className="ey-smoke s3" />
-            </div>
+          <div className="ey-actions">
+            <Link to="/enquiry" className="ey-btn">
+              Request an enquiry
+            </Link>
+            <a href="#products" className="ey-more">
+              See our product
+            </a>
           </div>
         </div>
-      </div>
 
-      <div className="ey-mid">
-        <div className="ey-track" style={{ '--t': '16s' }}>
-          <Wave fill="url(#ey-mid)" stroke="rgba(255,255,255,.28)" />
-          <Wave fill="url(#ey-mid)" stroke="rgba(255,255,255,.28)" />
+        {/* Animated map */}
+        <div
+          className="ey-map"
+          style={{ aspectRatio: `${MAP.w} / ${MAP.h}` }}
+          role="img"
+          aria-label="Map showing shipping routes from Mumbai port to destinations around the world"
+        >
+          <svg
+            viewBox={`0 0 ${MAP.w} ${MAP.h}`}
+            className="ey-svg"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            {/* land dots */}
+            <path d={WORLD_DOTS} className="ey-land" />
+            <path d={INDIA_DOTS} className="ey-india" />
+
+            {/* routes */}
+            {routes.map((r) => (
+              <g key={r.name} style={{ "--d": r.delay }}>
+                <path d={r.path} pathLength="1" className="ey-arc" />
+                <path d={r.path} pathLength="1" className="ey-travel" />
+                <circle cx={r.x} cy={r.y} r="6" className="ey-ring" />
+                <circle cx={r.x} cy={r.y} r="3.6" className="ey-dest" />
+              </g>
+            ))}
+
+            {/* Mumbai port */}
+            <circle cx={MUMBAI.x} cy={MUMBAI.y} r="5" className="ey-hub-ring" />
+            <circle
+              cx={MUMBAI.x}
+              cy={MUMBAI.y}
+              r="5"
+              className="ey-hub-ring ey-hub-ring-2"
+            />
+            <circle cx={MUMBAI.x} cy={MUMBAI.y} r="5" className="ey-hub" />
+          </svg>
+
+          {/* labels (HTML so the text stays readable at any size) */}
+          {routes.map((r) => (
+            <span
+              key={r.name}
+              className="ey-pin"
+              data-pos={r.pos || "top"}
+              style={{
+                left: pct(r.x, MAP.w),
+                top: pct(r.y, MAP.h),
+                "--d": r.delay,
+              }}
+            >
+              <span className="ey-tag">{r.name}</span>
+            </span>
+          ))}
+
+          <span
+            className="ey-pin ey-pin-hub"
+            data-pos="bottom"
+            style={{ left: pct(MUMBAI.x, MAP.w), top: pct(MUMBAI.y, MAP.h) }}
+          >
+            <span className="ey-tag">Mumbai port</span>
+          </span>
         </div>
       </div>
+    </section>
+  );
+};
 
-      {/* wake / foam, sits in front of the mid wave */}
-      <div className="ey-lane ey-lane-wake">
-        <div className="ey-enter">
-          <div className="ey-hullbox">
-            <span className="ey-stern" />
-            <span className="ey-stern s2" />
-            <span className="ey-bow" />
-          </div>
-        </div>
-      </div>
-
-      <div className="ey-front">
-        <div className="ey-track" style={{ '--t': '9s' }}>
-          <Wave fill="url(#ey-front)" stroke="rgba(255,255,255,.35)" />
-          <Wave fill="url(#ey-front)" stroke="rgba(255,255,255,.35)" />
-        </div>
-      </div>
-    </div>
-
-    <div className="ey-copy mt-20">
-      <h1>We export water bottles.</h1>
-      <p>
-        ExportYard ships bottled mineral water from Mumbai to ports around the world,
-        in full-container loads with documents handled.
-      </p>
-      <div className="ey-actions">
-        <a href="/enquiry" className="ey-btn">Request a Enquiry</a>
-      </div>
-    </div>
-  </section>
-)
-
-/* ---------- footer ---------- */
-const Foot = () => (
-  <footer className="ey-ft">
-    <b>ExportYard</b>
-    <span>Bottled mineral water, exported from Mumbai.</span>
-    <nav>
-      <a href="#products">Products</a>
-      <a href="#contact">Contact</a>
-    </nav>
-    <small>© {new Date().getFullYear()} ExportYard</small>
-  </footer>
-)
-
-/* ---------- styles ---------- */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap');
 
 .ey-hero {
-  --sun: clamp(70px, 11vw, 170px);
-  --sunR: 16%;
-  --W: min(88vw, 460px);
-  --shipBottom: 24%;
-  position: relative; width: 100%; height: 100vh; height: 100svh; min-height: 520px; overflow: hidden;
-  background: #0f2a4a; color: #fff; isolation: isolate;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* extra top space clears the fixed navbar */
+  padding: 7.5rem clamp(1.25rem, 5vw, 5rem) 3rem;
+  box-sizing: border-box;
+  color: #fff;
+  background:
+    radial-gradient(60rem 34rem at 78% 55%, rgba(56,189,208,.16), transparent 65%),
+    radial-gradient(40rem 24rem at 10% 0%, rgba(255,197,143,.07), transparent 60%),
+    #0a1628;
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
 }
-.ey-scene { position: absolute; inset: 0; }
-.ey-scene > * { position: absolute; }
 
-/* sky */
-.ey-sky { inset: 0; background: linear-gradient(to bottom, #0f2a4a 0%, #2d5f84 30%, #8bb8c8 48%, #f6c79b 60%, #ffd9ac 100%); }
-.ey-scrim { left: 0; right: 0; top: 0; height: 60%; z-index: 1; pointer-events: none;
-  background: linear-gradient(to bottom, rgba(8,26,48,.55), rgba(8,26,48,0)); }
-.ey-sun { z-index: 1; right: var(--sunR); top: 44%; width: var(--sun); aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, #fff7e2 0 22%, #ffd9a0 30%, rgba(255,184,110,.35) 45%, rgba(255,184,110,0) 70%); }
+.ey-inner {
+  width: 100%;
+  max-width: 96rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: center;
+}
 
-/* clouds: transform-only animation, no blur filter */
-.ey-cloud { z-index: 1; left: 0; height: 12%; border-radius: 50%; opacity: .75; will-change: transform;
-  background: radial-gradient(closest-side, rgba(255,255,255,.75), rgba(255,255,255,0));
-  animation: ey-cloud linear infinite; }
-.ey-cloud.c1 { top: 10%; width: 52vw; animation-duration: 120s; }
-.ey-cloud.c2 { top: 26%; width: 40vw; animation-duration: 90s; animation-delay: -40s; }
-.ey-cloud.c3 { top: 18%; width: 34vw; animation-duration: 150s; animation-delay: -90s; }
+/* ---------- copy ---------- */
+.ey-copy h1 {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+  animation: ey-rise .7s ease both;
+}
 
-.ey-gull { z-index: 2; left: 0; width: 26px; will-change: transform; animation: ey-fly linear infinite; }
-.ey-gull.g1 { top: 22%; animation-duration: 34s; }
-.ey-gull.g2 { top: 30%; animation-duration: 46s; animation-delay: -18s; }
-.ey-gull svg { display: block; width: 100%; fill: none; stroke: #1d3f58; stroke-width: 1.6; stroke-linecap: round;
-  transform-origin: 50% 100%; animation: ey-flap .8s ease-in-out infinite; }
+.ey-copy p {
+  margin: 1.25rem 0 0;
+  max-width: 34rem;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.65;
+  color: rgba(255,255,255,.8);
+  animation: ey-rise .7s .1s ease both;
+}
 
-.ey-port { z-index: 2; right: 2%; bottom: 40%; width: 24vw; }
+.ey-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.9rem;
+  animation: ey-rise .7s .2s ease both;
+}
 
-/* sea */
-.ey-sea { z-index: 2; left: 0; right: 0; bottom: 0; height: 40%;
-  background: linear-gradient(to bottom, #86b6c2 0%, #3b8aa2 14%, #0e4a64 55%, #072a3b 100%); }
-.ey-glitter { z-index: 2; right: calc(var(--sunR) - 2vw); bottom: 0; width: calc(var(--sun) + 4vw); height: 40%;
-  background: repeating-linear-gradient(to bottom, rgba(255,226,170,.6) 0 2px, transparent 2px 9px);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 0, #000 15%, transparent 70%);
-  mask-image: radial-gradient(ellipse at 50% 0, #000 15%, transparent 70%);
-  will-change: opacity; animation: ey-glit 3s ease-in-out infinite; }
+.ey-btn {
+  display: inline-block;
+  padding: .85rem 1.6rem;
+  border-radius: 999px;
+  background: #ffc58f;
+  color: #10222e;
+  font-size: .9rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-decoration: none;
+  transition: background .2s, transform .2s;
+}
 
-/* ship + wake lanes share identical sizing so the foam lines up with the hull */
-.ey-lane { left: 0; right: 0; bottom: var(--shipBottom); display: flex; justify-content: center; pointer-events: none; }
-.ey-lane-ship { z-index: 3; }
-.ey-lane-wake { z-index: 5; }
-.ey-enter { will-change: transform; animation: ey-enter 2.6s cubic-bezier(.2,.7,.2,1) both; }
-.ey-hullbox { position: relative; width: var(--W); aspect-ratio: 520 / 190; }
-.ey-bob { position: absolute; inset: 0; transform-origin: 50% 90%; will-change: transform; animation: ey-bob 5s ease-in-out infinite; }
-.ey-svg { display: block; width: 100%; height: auto; }
+.ey-btn:hover {
+  background: #ffd7b0;
+  transform: translateY(-1px);
+}
 
-/* funnel smoke */
-.ey-smoke { position: absolute; left: 24.2%; top: 20%; width: 5%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, rgba(70,80,90,.55), rgba(70,80,90,0) 70%); opacity: 0;
-  will-change: transform, opacity; animation: ey-smoke 6s ease-out infinite; }
-.ey-smoke.s2 { animation-delay: -2s; }
-.ey-smoke.s3 { animation-delay: -4s; }
+.ey-more {
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: #38bdd0;
+  text-underline-offset: 5px;
+}
 
-/* waves */
-.ey-mid, .ey-front { left: 0; width: 100%; overflow: hidden; }
-.ey-mid { z-index: 4; bottom: 0; height: 33%; }
-.ey-front { z-index: 6; bottom: 0; height: 20%; }
-.ey-track { display: flex; width: 200%; height: 100%; will-change: transform; animation: ey-drift var(--t) linear infinite; }
-.ey-seg { flex: 0 0 50%; height: 100%; display: block; }
+.ey-more:hover {
+  color: #38bdd0;
+}
 
-/* wake + foam (positions are % of the hull box, so they scale with the ship) */
-.ey-stern { position: absolute; left: -6%; bottom: 6%; width: 34%; height: 7%; border-radius: 50%; transform-origin: right center;
-  background: linear-gradient(to left, rgba(255,255,255,.75), rgba(255,255,255,0));
-  will-change: transform, opacity; animation: ey-foam 2.4s ease-in-out infinite; }
-.ey-stern.s2 { left: -14%; bottom: 0; width: 26%; height: 5%; opacity: .7; animation-delay: -1.2s; }
-.ey-bow { position: absolute; left: 88%; bottom: 3%; width: 14%; height: 10%; border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255,255,255,.95), rgba(255,255,255,0) 70%);
-  will-change: transform, opacity; animation: ey-bow 1.8s ease-in-out infinite; }
+.ey-btn:focus-visible,
+.ey-more:focus-visible {
+  outline: 2px solid #ffd9a0;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 
-/* lights */
-.ey-lit { animation: ey-lit 4s ease-in-out infinite; }
-.ey-pl { opacity: .85; }
+/* ---------- map ---------- */
+.ey-map {
+  position: relative;
+  width: 100%;
+  animation: ey-fade 1.2s .2s ease both;
+}
 
-/* copy */
-.ey-copy { position: absolute; z-index: 9; left: max(6vw, 22px); top: 11%; width: min(640px, calc(100% - 44px)); }
-.ey-copy h1 { margin: 0; font-weight: 700; letter-spacing: -.035em; line-height: 1; text-wrap: balance;
-  font-size: clamp(2.3rem, 6.4vw, 5rem); text-shadow: 0 2px 24px rgba(8,26,48,.45); }
-.ey-copy p { margin: 1.1rem 0 0; max-width: 46ch; font-size: clamp(1rem, 1.35vw, 1.15rem); line-height: 1.55;
-  color: rgba(255,255,255,.92); text-shadow: 0 1px 12px rgba(8,26,48,.5); }
-.ey-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.6rem; }
-.ey-btn { display: inline-block; padding: .9rem 1.5rem; border-radius: 10px; background: #ffc58f; color: #10222e;
-  font-weight: 600; text-decoration: none; transition: background .2s, transform .2s; }
-.ey-btn:hover { background: #ffd7b0; transform: translateY(-2px); }
-.ey-btn:focus-visible { outline: 2px solid #ffd9a0; outline-offset: 3px; }
+.ey-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
 
-/* keyframes (transform + opacity only, so they stay on the GPU) */
-@keyframes ey-drift { to { transform: translate3d(-50%, 0, 0); } }
-@keyframes ey-bob { 0%,100% { transform: translate3d(0,0,0) rotate(-.5deg); } 50% { transform: translate3d(0,.8%,0) rotate(.7deg); } }
-@keyframes ey-cloud { from { transform: translate3d(-60vw,0,0); } to { transform: translate3d(110vw,0,0); } }
-@keyframes ey-glit { 0%,100% { opacity: .9; } 50% { opacity: .5; } }
-@keyframes ey-enter { from { transform: translate3d(-80vw,0,0); } to { transform: translate3d(0,0,0); } }
-@keyframes ey-foam { 0%,100% { transform: scaleX(.85); opacity: .85; } 50% { transform: scaleX(1.15); opacity: .5; } }
-@keyframes ey-bow { 0%,100% { transform: scale(.9); opacity: .9; } 50% { transform: scale(1.15); opacity: .6; } }
-@keyframes ey-fly { from { transform: translate3d(-10vw,0,0); } to { transform: translate3d(112vw,0,0); } }
-@keyframes ey-flap { 50% { transform: scaleY(.45); } }
-@keyframes ey-lit { 0%,100% { opacity: 1; } 50% { opacity: .75; } }
-@keyframes ey-smoke {
-  0% { transform: translate3d(0,0,0) scale(.6); opacity: 0; }
-  15% { opacity: .7; }
-  100% { transform: translate3d(-380%,-260%,0) scale(3.2); opacity: 0; }
+.ey-land {
+  fill: none;
+  stroke: #7fb4c8;
+  stroke-opacity: .38;
+  stroke-width: 4.2;
+  stroke-linecap: round;
+}
+
+.ey-india {
+  fill: none;
+  stroke: #ffc58f;
+  stroke-opacity: .95;
+  stroke-width: 4.8;
+  stroke-linecap: round;
+}
+
+/* route line draws from Mumbai, holds, then fades */
+.ey-arc {
+  fill: none;
+  stroke: #38bdd0;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: ey-draw ${CYCLE}s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+
+/* bright dot that travels along the route */
+.ey-travel {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: .001 3;
+  stroke-dashoffset: 0;
+  opacity: 0;
+  animation: ey-travel ${CYCLE}s ease-in-out infinite;
+  animation-delay: var(--d);
+}
+
+.ey-dest {
+  fill: #fff;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ey-dest ${CYCLE}s ease-out infinite;
+  animation-delay: var(--d);
+}
+
+.ey-ring {
+  fill: none;
+  stroke: #38bdd0;
+  stroke-width: 1.6;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ey-ring ${CYCLE}s ease-out infinite;
+  animation-delay: var(--d);
+}
+
+/* Mumbai port marker */
+.ey-hub {
+  fill: #ffc58f;
+}
+
+.ey-hub-ring {
+  fill: none;
+  stroke: #ffc58f;
+  stroke-width: 1.8;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ey-hub 3s ease-out infinite;
+}
+
+.ey-hub-ring-2 {
+  animation-delay: 1.5s;
+}
+
+/* labels */
+.ey-pin {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.ey-tag {
+  position: absolute;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: rgba(255,255,255,.88);
+  text-shadow: 0 1px 8px rgba(10,22,40,.9);
+  opacity: 0;
+  animation: ey-label ${CYCLE}s ease-out infinite;
+  animation-delay: var(--d);
+}
+
+.ey-pin[data-pos="top"] .ey-tag {
+  bottom: 9px;
+}
+
+.ey-pin[data-pos="bottom"] .ey-tag {
+  top: 9px;
+}
+
+.ey-pin-hub .ey-tag {
+  opacity: 1;
+  animation: none;
+  top: 11px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: #ffc58f;
+}
+
+/* ---------- keyframes ---------- */
+@keyframes ey-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes ey-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ey-draw {
+  0%   { stroke-dashoffset: 1; opacity: 1; }
+  32%  { stroke-dashoffset: 0; opacity: 1; }
+  78%  { stroke-dashoffset: 0; opacity: .85; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes ey-travel {
+  0%   { stroke-dashoffset: 0; opacity: 1; }
+  32%  { stroke-dashoffset: -1; opacity: 1; }
+  33%  { stroke-dashoffset: -1; opacity: 0; }
+  100% { stroke-dashoffset: -1; opacity: 0; }
+}
+
+@keyframes ey-dest {
+  0%, 30% { opacity: 0; transform: scale(0); }
+  36%     { opacity: 1; transform: scale(1.5); }
+  44%     { opacity: 1; transform: scale(1); }
+  78%     { opacity: 1; transform: scale(1); }
+  100%    { opacity: 0; transform: scale(1); }
+}
+
+@keyframes ey-ring {
+  0%, 31% { opacity: 0; transform: scale(.3); }
+  33%     { opacity: .9; transform: scale(.3); }
+  55%     { opacity: 0; transform: scale(2.8); }
+  100%    { opacity: 0; transform: scale(2.8); }
+}
+
+@keyframes ey-label {
+  0%, 30% { opacity: 0; }
+  40%     { opacity: 1; }
+  78%     { opacity: 1; }
+  100%    { opacity: 0; }
+}
+
+@keyframes ey-hub {
+  0%   { opacity: .9; transform: scale(.6); }
+  100% { opacity: 0; transform: scale(3.6); }
 }
 
 /* ---------- responsive ---------- */
-/* tablets and up: a bigger ship */
-@media (min-width: 700px) {
-  .ey-hero { --W: min(52vw, 120vh); --shipBottom: 21%; }
+@media (min-width: 1000px) {
+  .ey-inner {
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.5fr);
+    gap: 3rem;
+  }
 }
-/* desktop: ship sits to the right, text on the left */
-@media (min-width: 900px) {
-  .ey-lane { justify-content: flex-end; padding-right: 5vw; box-sizing: border-box; }
-}
-/* phones */
+
+/* phones: thicker lines so they stay visible, only the Mumbai label */
 @media (max-width: 699px) {
-  .ey-hero { --sunR: 8%; --sun: 76px; }
-  .ey-sun { top: 47%; }
-  .ey-glitter, .ey-port { display: none; }
-  .ey-cloud.c1 { width: 90vw; } .ey-cloud.c2 { width: 70vw; } .ey-cloud.c3 { width: 60vw; }
-  .ey-copy p { font-size: 1rem; }
-}
-/* short landscape screens (phones turned sideways) */
-@media (max-height: 520px) and (min-width: 600px) {
-  .ey-hero { --W: min(40vw, 90vh); min-height: 400px; }
-  .ey-copy { top: 8%; }
-  .ey-copy h1 { font-size: clamp(1.8rem, 5vw, 3rem); }
-  .ey-copy p { display: none; }
-  .ey-actions { margin-top: 1rem; }
+  .ey-hero {
+    padding-top: 6.5rem;
+    align-items: flex-start;
+  }
+
+  .ey-arc {
+    stroke-width: 2.8;
+  }
+
+  .ey-travel {
+    stroke-width: 7;
+  }
+
+  .ey-tag {
+    display: none;
+  }
+
+  .ey-pin-hub .ey-tag {
+    display: block;
+    font-size: .7rem;
+  }
 }
 
+/* ---------- reduced motion: show the finished map, no movement ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ey-hero *, .ey-hero *::before { animation: none !important; }
+  .ey-copy h1,
+  .ey-copy p,
+  .ey-actions,
+  .ey-map {
+    animation: none;
+  }
+
+  .ey-arc {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: .7;
+  }
+
+  .ey-travel,
+  .ey-ring,
+  .ey-hub-ring {
+    animation: none;
+    opacity: 0;
+  }
+
+  .ey-dest {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .ey-tag {
+    animation: none;
+    opacity: 1;
+  }
+
+  .ey-btn {
+    transition: none;
+  }
 }
+`;
 
-/* ---------- footer ---------- */
-.ey-ft { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.8rem; padding: 1.6rem 6vw; background: #060d16; color: rgba(255,255,255,.7);
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: .9rem; border-top: 1px solid rgba(255,255,255,.08); }
-.ey-ft b { color: #fff; font-size: 1.05rem; }
-.ey-ft nav { display: flex; gap: 1.2rem; margin-left: auto; }
-.ey-ft a { color: inherit; text-decoration: none; }
-.ey-ft a:hover { color: #ffc58f; }
-.ey-ft a:focus-visible { outline: 2px solid #ffd9a0; outline-offset: 3px; }
-@media (max-width: 600px) { .ey-ft nav { margin-left: 0; width: 100%; } }
-`
-
-/* ---------- full experience ---------- */
-const Hero = () => (
-  <>
-    <style>{css}</style>
-    <Intro />
-  </>
-)
-
-export default Hero
+export default Hero;

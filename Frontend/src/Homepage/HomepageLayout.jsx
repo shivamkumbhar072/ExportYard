@@ -1,12 +1,12 @@
 import React from 'react'
 import Hero from './Hero.jsx'
-import Container from './Container.jsx'
+import Products from './Products.jsx'
 
 const HomapageLayout = () => {
   return (
     <>
-    <Hero />
-    <Container />
+      <Hero />
+      <Products />
     </>
   )
 }
