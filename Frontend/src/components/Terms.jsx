@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
 const LAST_UPDATED = "31 October 2026";
@@ -271,7 +270,7 @@ const css = `
 .tc-page {
   min-height: 100vh;
   padding-bottom: 5rem;
-  background: #0a1628;
+  background: #071c30;
   color: #fff;
 }
 
@@ -289,7 +288,7 @@ const css = `
   padding: 8rem 0 3.5rem;
   background:
     radial-gradient(70rem 30rem at 85% -10%, rgba(56,189,208,.18), transparent 60%),
-    #0a1628;
+    #071c30;
   border-bottom: 1px solid rgba(56,189,208,.15);
 }
 
@@ -320,13 +319,13 @@ const css = `
 }
 
 .tc-link {
-  color: #38bdd0;
+  color: #d9a441;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .tc-link:hover {
-  color: #ffc58f;
+  color: #e8b85d;
 }
 
 .tc-link:focus-visible,
@@ -355,7 +354,7 @@ const css = `
   margin: 0 0 .45rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #38bdd0;
+  color: #d9a441;
 }
 
 .tc-highlight p {
@@ -392,7 +391,7 @@ const css = `
   font-size: .85rem;
   font-weight: 700;
   color: #10222e;
-  background: #38bdd0;
+  background: #d9a441;
 }
 
 .tc-row-head h2 {
@@ -425,7 +424,7 @@ const css = `
 }
 
 .tc-row-body li::marker {
-  color: #38bdd0;
+  color: #d9a441;
 }
 
 .tc-row-body li strong {
@@ -453,7 +452,7 @@ const css = `
   margin: 0 0 .4rem;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #ffc58f;
+  color: #e8b85d;
 }
 
 .tc-contact p {
@@ -468,13 +467,13 @@ const css = `
   font-weight: 600;
   color: #fff;
   text-decoration: underline;
-  text-decoration-color: #ffc58f;
+  text-decoration-color: #e8b85d;
   text-underline-offset: 4px;
   overflow-wrap: anywhere;
 }
 
 .tc-contact-mail:hover {
-  color: #ffc58f;
+  color: #e8b85d;
 }
 
 @keyframes tc-rise {

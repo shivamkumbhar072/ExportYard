@@ -5,7 +5,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import { loginUser } from "../services/api";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNotification } from "../context/useNotification.js";
-import AuthShell, { useFitWidth } from "../components/AuthShell.jsx";
+import AuthShell from "../components/AuthShell.jsx";
+import useFitWidth from "../hooks/useFitWidth.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 

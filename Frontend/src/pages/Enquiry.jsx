@@ -31,7 +31,7 @@ const initialForm = {
 const labelClass =
   "flex flex-col gap-2 text-sm font-medium text-[#14243a]";
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#14243a] outline-none transition placeholder:text-slate-400 focus:border-[#16899b] focus:ring-4 focus:ring-[#16899b]/10";
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#172536] outline-none transition placeholder:text-slate-400 focus:border-[#d9a441] focus:ring-4 focus:ring-[#d9a441]/15";
 
 function updateMeta(selector, attribute, value) {
   let element = document.head.querySelector(selector);
@@ -291,16 +291,16 @@ export default function Enquiry() {
         <header className="mb-10 max-w-3xl">
           <Link
             to="/"
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-[#087f91]"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-[#8b5e0b]"
           >
             <ArrowRight className="rotate-180" size={16} />
             Back to ExportYard
           </Link>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#087f91]">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8b5e0b]">
             ExportYard · India trade connections
           </p>
-          <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-[#0a1628] sm:text-5xl">
-            Let’s start a <span className="text-[#087f91]">trade conversation.</span>
+          <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-[#071c30] sm:text-5xl">
+            Let’s start a <span className="text-[#9c6a11]">trade conversation.</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
             Whether you are looking to source products or supply them, tell us
@@ -312,8 +312,8 @@ export default function Enquiry() {
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-40px_rgba(10,22,40,.35)] sm:p-8">
             {submitted ? (
               <div className="py-10 text-center" role="status" aria-live="polite">
-                <CheckCircle2 className="mx-auto text-[#087f91]" size={52} />
-                <h2 className="mt-5 text-2xl font-bold text-[#0a1628]">
+                <CheckCircle2 className="mx-auto text-[#9c6a11]" size={52} />
+                <h2 className="mt-5 text-2xl font-bold text-[#071c30]">
                   Thanks — we’ve received your enquiry.
                 </h2>
                 <p className="mx-auto mt-3 max-w-lg leading-7 text-slate-600">
@@ -323,7 +323,7 @@ export default function Enquiry() {
                 <button
                   type="button"
                   onClick={() => setSubmitted(false)}
-                  className="mt-7 rounded-full bg-[#0a1628] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#143453]"
+                  className="mt-7 rounded-md bg-[#071c30] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#102b43]"
                 >
                   Send another enquiry
                 </button>
@@ -331,7 +331,7 @@ export default function Enquiry() {
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-8">
                 <fieldset>
-                  <legend className="text-lg font-bold text-[#0a1628]">
+                  <legend className="text-lg font-bold text-[#071c30]">
                     How can we help?
                   </legend>
                   <p className="mt-1 text-sm text-slate-500">
@@ -346,7 +346,7 @@ export default function Enquiry() {
                         key={value}
                         className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${
                           form.enquiryType === value
-                            ? "border-[#087f91] bg-[#087f91]/5 ring-2 ring-[#087f91]/10"
+                            ? "border-[#d9a441] bg-[#d9a441]/5 ring-2 ring-[#d9a441]/15"
                             : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
@@ -356,10 +356,10 @@ export default function Enquiry() {
                           value={value}
                           checked={form.enquiryType === value}
                           onChange={handleChange}
-                          className="mt-1 accent-[#087f91]"
+                          className="mt-1 accent-[#d9a441]"
                         />
                         <span>
-                          <span className="block font-semibold text-[#0a1628]">
+                          <span className="block font-semibold text-[#071c30]">
                             {value}
                           </span>
                           <span className="mt-1 block text-sm text-slate-500">
@@ -372,7 +372,7 @@ export default function Enquiry() {
                 </fieldset>
 
                 <div className="border-t border-slate-100 pt-7">
-                  <h2 className="text-lg font-bold text-[#0a1628]">
+                  <h2 className="text-lg font-bold text-[#071c30]">
                     Your contact details
                   </h2>
                   <div className="mt-4 grid gap-5 sm:grid-cols-2">
@@ -486,7 +486,7 @@ export default function Enquiry() {
                 </div>
 
                 <div className="border-t border-slate-100 pt-7">
-                  <h2 className="text-lg font-bold text-[#0a1628]">
+                  <h2 className="text-lg font-bold text-[#071c30]">
                     {isBuyer ? "What are you looking to source?" : "What can you supply?"}
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
@@ -606,7 +606,7 @@ export default function Enquiry() {
                     name="whatsappConsent"
                     checked={form.whatsappConsent}
                     onChange={handleChange}
-                    className="mt-1 h-4 w-4 accent-[#087f91]"
+                    className="mt-1 h-4 w-4 accent-[#d9a441]"
                   />
                   <span>
                     I agree to be contacted on WhatsApp about this enquiry.
@@ -631,7 +631,7 @@ export default function Enquiry() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0a1628] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#143453] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087f91] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#071c30] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#102b43] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d9a441] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Send size={16} />
                     {loading
@@ -646,8 +646,8 @@ export default function Enquiry() {
           </section>
 
           <aside className="space-y-4 lg:sticky lg:top-28">
-            <div className="rounded-3xl bg-[#0a1628] p-6 text-white">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#72d3df]">
+            <div className="rounded-lg bg-[#071c30] p-6 text-white">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8b85d]">
                 One enquiry, one team
               </p>
               <h2 className="mt-3 text-xl font-bold">
@@ -659,7 +659,7 @@ export default function Enquiry() {
               </p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-6">
-              <h2 className="font-bold text-[#0a1628]">A useful enquiry includes</h2>
+              <h2 className="font-bold text-[#071c30]">A useful enquiry includes</h2>
               <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
                 <li>Product name or category</li>
                 <li>Approximate quantity and timeline</li>
@@ -668,7 +668,7 @@ export default function Enquiry() {
               </ul>
               <Link
                 to="/privacy-policy"
-                className="mt-5 inline-block text-sm font-semibold text-[#087f91] underline-offset-4 hover:underline"
+                className="mt-5 inline-block text-sm font-semibold text-[#8b5e0b] underline-offset-4 hover:underline"
               >
                 Read our privacy policy
               </Link>

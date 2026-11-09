@@ -1,35 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Menu, X, LogOut } from "lucide-react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNotification } from "../context/useNotification.js";
 
-const SCROLL_OFFSET = 40;
-
-const Navbar = () => {
-  const [navOpen, setNavOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+export default function Navbar() {
   const [confirmOpen, setConfirmOpen] = useState(false);
-
-  const cancelRef = useRef(null);
   const { user, isLoggedIn, logout } = useAuth();
   const notify = useNotification();
-  const location = useLocation();
   const navigate = useNavigate();
 
-  const close = () => setNavOpen(false);
-  const firstName = user?.name?.trim().split(/\s+/)[0] || "User";
-  const isAdmin = isLoggedIn && user?.role === "admin";
-  const solidHeader = scrolled || location.pathname === "/enquiry";
-
-  // Open the logout confirmation dialog
-  function askLogout() {
-    close();
-    setConfirmOpen(true);
-  }
-
-  // Log out after confirmation
   function confirmLogout() {
     logout();
     setConfirmOpen(false);
@@ -37,536 +16,123 @@ const Navbar = () => {
     navigate("/", { replace: true });
   }
 
-  // Transparent at the top, solid after scrolling
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > SCROLL_OFFSET);
+  const accountActions = (
+    <div className="flex min-w-0 items-center justify-end gap-3 sm:gap-4">
+      {isLoggedIn ? (
+        <>
+          <span className="max-w-[35vw] truncate text-sm text-white/85 sm:max-w-48">
+            Hello, {user?.name || "there"}
+          </span>
+          <button
+            className="shrink-0 rounded border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+            onClick={() => setConfirmOpen(true)}
+            type="button"
+          >
+            Log out
+          </button>
+        </>
+      ) : (
+        <Link
+          className="rounded px-2 py-2 text-sm font-medium text-white hover:text-[#e8b85d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+          to="/login"
+        >
+          Log in
+        </Link>
+      )}
+    </div>
+  );
 
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Close mobile menu with Escape
-  useEffect(() => {
-    if (!navOpen) return;
-
-    const onKey = (e) => {
-      if (e.key === "Escape") setNavOpen(false);
-    };
-
-    window.addEventListener("keydown", onKey);
-
-    return () => window.removeEventListener("keydown", onKey);
-  }, [navOpen]);
-
-  // Handle logout dialog keyboard and scroll behavior
-  useEffect(() => {
-    if (!confirmOpen) return;
-
-    const onKey = (e) => {
-      if (e.key === "Escape") setConfirmOpen(false);
-    };
-
-    window.addEventListener("keydown", onKey);
-    cancelRef.current?.focus();
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [confirmOpen]);
+  const pageLinks = (
+    <>
+      <NavLink
+        to="/about"
+        className={({ isActive }) =>
+          `py-1 text-sm font-medium ${
+            isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
+          }`
+        }
+      >
+        About
+      </NavLink>
+      {user?.role === "admin" && (
+        <NavLink
+          to="/admin"
+          end
+          className={({ isActive }) =>
+            `py-1 text-sm font-medium ${
+              isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
+            }`
+          }
+        >
+          Admin panel
+        </NavLink>
+      )}
+    </>
+  );
 
   return (
     <>
-      {/* Styles are injected once here and apply to the portals as well */}
-      <style>{css}</style>
-
-      <header className={`nv-header${solidHeader ? " is-scrolled" : ""}`}>
-        <div className="nv-bar">
-          {/* Logo */}
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#071c30] text-white">
+        <div className="mx-auto flex max-w-[88rem] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:min-h-[72px] sm:flex-nowrap sm:px-6 sm:py-0 lg:px-8">
           <Link
             to="/"
-            onClick={close}
-            className="nv-logo"
+            className="shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8b85d]"
             aria-label="ExportYard home"
           >
-            <img src="/Images/logo.png" alt="ExportYard Logo" />
+            <img className="h-8 w-auto sm:h-10" src="/Images/logo.png" alt="ExportYard" />
           </Link>
 
-          {/* Desktop navigation */}
-          <div className="nv-desktop">
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `nv-link nv-about${isActive ? " is-active" : ""}`
-              }
-            >
-              ABOUT
-            </NavLink>
-
-            {isLoggedIn ? (
-              <>
-                <span className="nv-user">Hello, {firstName}</span>
-
-                <button
-                  type="button"
-                  className="nv-link nv-outline nv-button"
-                  onClick={askLogout}
-                >
-                  LOGOUT
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="nv-link">
-                  LOGIN
-                </Link>
-
-                <Link to="/register" className="nv-link nv-outline">
-                  SIGN UP
-                </Link>
-              </>
-            )}
-
-            {/* Admin panel button: administrators only */}
-            {isAdmin && (
-              <Link to="/admin" className="nv-link nv-outline">
-                ADMIN PANEL
-              </Link>
-            )}
-
-            <NavLink
-              to="/enquiry"
-              className={({ isActive }) =>
-                `nv-link nv-cta${isActive ? " is-active" : ""}`
-              }
-            >
-              SEND AN ENQUIRY
-            </NavLink>
+          <div className="order-2 ml-auto flex min-w-0 items-center sm:order-3 sm:ml-0">
+            {accountActions}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="nv-toggle"
-            onClick={() => setNavOpen((open) => !open)}
-            aria-label={navOpen ? "Close navigation" : "Open navigation"}
-            aria-expanded={navOpen}
-            aria-controls="nv-mobile"
+          <nav
+            className="order-3 flex w-full items-center gap-6 border-t border-white/15 pt-2 sm:order-2 sm:ml-auto sm:w-auto sm:border-0 sm:pt-0"
+            aria-label="Main navigation"
           >
-            {navOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile navigation */}
-        {navOpen && (
-          <nav id="nv-mobile" className="nv-mobile" aria-label="Mobile">
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                `nv-m-link${isActive ? " is-active" : ""}`
-              }
-              onClick={close}
-            >
-              ABOUT
-            </NavLink>
-
-            {isLoggedIn ? (
-              <>
-                <span className="nv-user nv-mobile-user">
-                  Hello, {firstName}
-                </span>
-
-                <button
-                  type="button"
-                  className="nv-m-link nv-m-button"
-                  onClick={askLogout}
-                >
-                  LOGOUT
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="nv-m-link" onClick={close}>
-                  LOGIN
-                </Link>
-
-                <Link to="/register" className="nv-m-link" onClick={close}>
-                  SIGN UP
-                </Link>
-              </>
-            )}
-
-            {/* Admin panel button on mobile */}
-            {isAdmin && (
-              <Link to="/admin" className="nv-m-link" onClick={close}>
-                ADMIN PANEL
-              </Link>
-            )}
-
-            <Link
-              to="/enquiry"
-              className="nv-link nv-cta nv-m-cta"
-              onClick={close}
-            >
-              SEND AN ENQUIRY
-            </Link>
+            {pageLinks}
           </nav>
-        )}
+        </div>
       </header>
 
-      {/* Logout confirmation dialog */}
-      {confirmOpen &&
-        createPortal(
-          <div className="nv-overlay" onClick={() => setConfirmOpen(false)}>
-            <div
-              className="nv-dialog"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="nv-dialog-title"
-              aria-describedby="nv-dialog-desc"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="nv-dialog-icon">
-                <LogOut size={22} />
-              </div>
-
-              <h2 id="nv-dialog-title">Log out?</h2>
-
-              <p id="nv-dialog-desc">
-                Are you sure you want to log out of your ExportYard account?
-              </p>
-
-              <div className="nv-dialog-actions">
-                <button
-                  ref={cancelRef}
-                  type="button"
-                  className="nv-link nv-outline nv-button"
-                  onClick={() => setConfirmOpen(false)}
-                >
-                  CANCEL
-                </button>
-
-                <button
-                  type="button"
-                  className="nv-link nv-cta nv-button-solid"
-                  onClick={confirmLogout}
-                >
-                  YES, LOGOUT
-                </button>
-              </div>
+      {confirmOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#071c30]/70 p-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setConfirmOpen(false);
+          }}
+        >
+          <section
+            className="w-full max-w-sm rounded-lg bg-white p-6 text-[#172536] shadow-xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="logout-title"
+            aria-describedby="logout-description"
+          >
+            <h2 id="logout-title" className="text-xl font-bold">Log out?</h2>
+            <p id="logout-description" className="mt-2 text-sm leading-6 text-[#4b5563]">
+              You can log back in at any time.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="rounded border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="rounded bg-[#071c30] px-4 py-2 text-sm font-semibold text-white hover:bg-[#102b43]"
+              >
+                Log out
+              </button>
             </div>
-          </div>,
-          document.body
-        )}
-
+          </section>
+        </div>
+      )}
     </>
   );
-};
-
-const css = `
-.nv-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 30;
-  background: rgba(10,22,40,0);
-  border-bottom: 1px solid rgba(56,189,208,0);
-  transition: background-color .35s ease, border-color .35s ease, box-shadow .35s ease;
 }
-
-/* after scrolling: smooth fade to the solid navy bar */
-.nv-header.is-scrolled {
-  background: rgba(10,22,40,.97);
-  border-bottom-color: rgba(56,189,208,.2);
-  box-shadow: 0 8px 24px -12px rgba(0,0,0,.6);
-}
-
-.nv-bar {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: .75rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.nv-logo {
-  display: inline-flex;
-  line-height: 0;
-}
-
-.nv-logo img {
-  height: 2.5rem;
-  width: auto;
-  display: block;
-  filter: drop-shadow(0 1px 6px rgba(8,26,48,.45));
-}
-
-.nv-desktop {
-  display: none;
-  align-items: center;
-  gap: .75rem;
-}
-
-.nv-link {
-  display: inline-block;
-  padding: .6rem 1.25rem;
-  border-radius: 999px;
-  font-size: .75rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  color: #fff;
-  text-decoration: none;
-  white-space: nowrap;
-  text-shadow: 0 1px 8px rgba(8,26,48,.45);
-  transition: background .2s, border-color .2s, transform .2s;
-}
-
-.nv-link:hover {
-  background: rgba(255,255,255,.12);
-}
-
-.nv-outline {
-  border: 1px solid rgba(255,255,255,.4);
-}
-
-.nv-outline:hover {
-  border-color: rgba(255,255,255,.75);
-}
-
-.nv-button {
-  cursor: pointer;
-  background: transparent;
-  font-family: inherit;
-}
-
-.nv-cta {
-  background: #ffc58f;
-  color: #10222e;
-  text-shadow: none;
-}
-
-.nv-cta:hover {
-  background: #ffd7b0;
-  transform: translateY(-1px);
-}
-
-.nv-user {
-  color: #fff;
-  font-size: .8rem;
-  font-weight: 600;
-  letter-spacing: .02em;
-  text-shadow: 0 1px 8px rgba(8,26,48,.45);
-}
-
-/* ---------- About link ---------- */
-.nv-about {
-  position: relative;
-  padding-left: .9rem;
-  padding-right: .9rem;
-}
-
-.nv-about:hover {
-  background: transparent;
-}
-
-.nv-about::after {
-  content: "";
-  position: absolute;
-  left: .9rem;
-  right: .9rem;
-  bottom: .3rem;
-  height: 2px;
-  border-radius: 2px;
-  background: #38bdd0;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform .25s ease;
-}
-
-.nv-about:hover::after,
-.nv-about.is-active::after {
-  transform: scaleX(1);
-}
-
-.nv-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  cursor: pointer;
-  border-radius: 8px;
-  filter: drop-shadow(0 1px 6px rgba(8,26,48,.45));
-}
-
-/* the open mobile menu keeps a dark panel so the links stay readable */
-.nv-mobile {
-  display: flex;
-  flex-direction: column;
-  gap: .25rem;
-  margin: 0 .75rem .75rem;
-  padding: .75rem 1.25rem 1.25rem;
-  border: 1px solid rgba(56,189,208,.2);
-  border-radius: 14px;
-  background: rgba(10,22,40,.96);
-  box-shadow: 0 20px 40px -16px rgba(0,0,0,.6);
-}
-
-.nv-m-link {
-  display: block;
-  padding: .85rem 0;
-  color: #fff;
-  text-decoration: none;
-  font-size: .8rem;
-  font-weight: 600;
-  letter-spacing: .08em;
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-.nv-m-link.is-active {
-  color: #38bdd0;
-}
-
-.nv-m-button {
-  background: transparent;
-  border-top: 0;
-  border-left: 0;
-  border-right: 0;
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  font-family: inherit;
-}
-
-.nv-mobile-user {
-  padding: .85rem 0;
-}
-
-.nv-m-cta {
-  margin-top: .9rem;
-  padding: .9rem 1.25rem;
-  text-align: center;
-}
-
-.nv-link:focus-visible,
-.nv-m-link:focus-visible,
-.nv-toggle:focus-visible,
-.nv-logo:focus-visible {
-  outline: 2px solid #ffd9a0;
-  outline-offset: 3px;
-}
-
-/* ---------- logout confirmation dialog ---------- */
-.nv-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem;
-  background: rgba(5,12,24,.7);
-  backdrop-filter: blur(4px);
-  animation: nv-fade .2s ease;
-}
-
-.nv-dialog {
-  width: 100%;
-  max-width: 24rem;
-  padding: 1.75rem 1.5rem 1.5rem;
-  text-align: center;
-  color: #fff;
-  background: rgba(10,22,40,.98);
-  border: 1px solid rgba(56,189,208,.25);
-  border-radius: 16px;
-  box-shadow: 0 24px 60px -16px rgba(0,0,0,.7);
-  animation: nv-pop .25s ease;
-}
-
-.nv-dialog-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: .9rem;
-  border-radius: 50%;
-  color: #ffc58f;
-  background: rgba(255,197,143,.12);
-  border: 1px solid rgba(255,197,143,.35);
-}
-
-.nv-dialog h2 {
-  margin: 0 0 .4rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.nv-dialog p {
-  margin: 0 0 1.4rem;
-  font-size: .85rem;
-  line-height: 1.5;
-  color: rgba(255,255,255,.7);
-}
-
-.nv-dialog-actions {
-  display: flex;
-  gap: .75rem;
-  justify-content: center;
-}
-
-.nv-dialog-actions .nv-link {
-  flex: 1;
-  text-align: center;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.nv-button-solid {
-  border: 0;
-}
-
-@keyframes nv-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes nv-pop {
-  from { opacity: 0; transform: translateY(8px) scale(.97); }
-  to { opacity: 1; transform: none; }
-}
-
-@media (min-width: 768px) {
-  .nv-desktop {
-    display: flex;
-  }
-
-  .nv-toggle,
-  .nv-mobile {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nv-header,
-  .nv-link,
-  .nv-about::after,
-  .nv-overlay,
-  .nv-dialog {
-    transition: none;
-    animation: none;
-  }
-}
-`;
-
-export default Navbar;
