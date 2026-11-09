@@ -6,7 +6,7 @@ export default function PageHero({ eyebrow, title, description, image }) {
       {image && (
         <>
           <ImageFrame src={image} alt="" className="absolute inset-0 -z-20" />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102b24]/95 via-[#183F35]/85 to-[#183F35]/60" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102b24]/55 via-[#183F35]/45 to-[#183F35]/40" />
         </>
       )}
       <div className="mx-auto max-w-[88rem]">

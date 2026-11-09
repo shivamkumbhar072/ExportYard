@@ -6,13 +6,11 @@ export default function Hero() {
   return (
     <section className="relative isolate flex min-h-[670px] items-center bg-[#183F35] py-28 text-white sm:min-h-[640px] sm:py-32">
       <ImageFrame
-        src="/Images/hero-port-optimized.webp"
+        src="/Images/hero-port.jpg"
         alt=""
         className="absolute inset-0 -z-20"
-        loading="eager"
-        fetchPriority="high"
       />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102b24]/95 via-[#183F35]/78 to-[#183F35]/25" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#102b24]/55 via-[#183F35]/45 to-[#183F35]/40" />
       <div className="mx-auto w-full max-w-[88rem] px-5 sm:px-8 lg:px-12">
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#e5ae83]">
