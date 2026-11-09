@@ -4,6 +4,8 @@ import {
   Users as UsersIcon,
   MessageSquare,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext.jsx";
+
 const navigation = [
   {
     label: "Dashboard",
@@ -24,17 +26,17 @@ const navigation = [
 ];
 
 export default function AdminLayout() {
-  const token = localStorage.getItem("token");
+  const { user, isLoggedIn, authLoading } = useAuth();
 
-  let user;
-
-  try {
-    user = JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return <Navigate to="/login" replace />;
+  if (authLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f5f6f7] px-4 text-sm text-slate-600">
+        Verifying admin access…
+      </main>
+    );
   }
 
-  if (!token || !user) {
+  if (!isLoggedIn || !user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -43,18 +45,22 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      {/* Navy band: sits behind the transparent navbar so its white text stays readable */}
-      <section className="border-b border-[rgba(56,189,208,0.2)] bg-[#0a1628] pt-24">
-        <div className="mx-auto max-w-6xl px-6 pb-5">
-          <p className="text-sm font-semibold text-white">Admin workspace</p>
-          <p className="mt-1 text-xs text-white/60">
-            Manage your ExportYard platform
+    <div className="flex min-h-screen flex-col bg-[#f5f6f7] text-[#172536]">
+      <section className="border-b border-white/10 bg-[#071c30] px-4 pb-5 pt-24 text-white sm:px-6 sm:pb-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e8b85d]">
+            ExportYard administration
+          </p>
+          <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
+            Admin workspace
+          </h1>
+          <p className="mt-1 text-sm text-white/65">
+            Manage accounts and trade enquiries.
           </p>
 
           <nav
             aria-label="Admin"
-            className="mt-5 flex gap-2 overflow-x-auto pb-1"
+            className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
           >
             {navigation.map(({ label, path, icon: Icon, end }) => (
               <NavLink
@@ -62,25 +68,24 @@ export default function AdminLayout() {
                 to={path}
                 end={end}
                 className={({ isActive }) =>
-                  `inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold tracking-[0.08em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd9a0] ${
+                  `inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d] sm:px-4 ${
                     isActive
-                      ? "bg-[#ffc58f] text-[#10222e]"
-                      : "border border-white/40 text-white hover:border-white/75 hover:bg-white/10"
+                      ? "bg-[#e8b85d] text-[#071c30]"
+                      : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`
                 }
               >
-                <Icon size={16} />
-                {label.toUpperCase()}
+                <Icon size={17} />
+                {label}
               </NavLink>
             ))}
           </nav>
         </div>
       </section>
 
-      <main className="flex-1 p-4 sm:p-8">
+      <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <Outlet />
       </main>
-
     </div>
   );
 }

@@ -1,24 +1,37 @@
 
 const User = require("../models/user");
+const Enquiry = require("../models/Enquiry");
 
 // GET /api/admin/dashboard
 const getDashboard = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-
     // Users registered in the last 7 days
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentUsersCount = await User.countDocuments({
-      createdAt: { $gte: sevenDaysAgo },
-    });
-
-    const recentUsers = await User.find()
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+    const [
+      totalUsers,
+      recentUsersCount,
+      recentUsers,
+      totalEnquiries,
+      newEnquiriesCount,
+      recentEnquiries,
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+      User.find()
+        .select("name email role createdAt")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+      Enquiry.countDocuments(),
+      Enquiry.countDocuments({ status: "New" }),
+      Enquiry.find()
+        .select("name productName enquiryType status createdAt")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean(),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -26,6 +39,9 @@ const getDashboard = async (req, res) => {
         totalUsers,
         recentUsersCount,
         recentUsers,
+        totalEnquiries,
+        newEnquiriesCount,
+        recentEnquiries,
       },
     });
   } catch (error) {

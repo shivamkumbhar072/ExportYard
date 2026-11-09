@@ -293,29 +293,33 @@ export default function Enquiry() {
   const isBuyer = form.enquiryType === "Buyer";
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] px-4 pb-20 pt-28 text-[#14243a] sm:px-6">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 max-w-3xl">
-          <Link
-            to="/"
-            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-[#8b5e0b]"
-          >
-            <ArrowRight className="rotate-180" size={16} />
-            Back to ExportYard
-          </Link>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8b5e0b]">
-            ExportYard · India trade connections
-          </p>
-          <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-[#071c30] sm:text-5xl">
-            Let’s start a <span className="text-[#9c6a11]">trade conversation.</span>
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-            Whether you are looking to source products or supply them, tell us
-            what you need. Our team will review your details and get back to you.
-          </p>
-        </header>
+    <main className="min-h-screen bg-[#f5f7f8] text-[#14243a]">
+      <header className="bg-[#071c30] px-4 pb-14 pt-28 text-white sm:px-6 sm:pb-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <Link
+              to="/"
+              className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-white/75 transition hover:text-[#e8b85d]"
+            >
+              <ArrowRight className="rotate-180" size={16} />
+              Back to ExportYard
+            </Link>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e8b85d]">
+              ExportYard · India trade connections
+            </p>
+            <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+              Let’s start a <span className="text-[#e8b85d]">trade conversation.</span>
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
+              Whether you are looking to source products or supply them, tell us
+              what you need. Our team will review your details and get back to you.
+            </p>
+          </div>
+        </div>
+      </header>
 
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="px-4 pb-20 pt-10 sm:px-6">
+        <div className="mx-auto grid max-w-6xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-40px_rgba(10,22,40,.35)] sm:p-8">
             {submitted ? (
               <div className="py-10 text-center" role="status" aria-live="polite">

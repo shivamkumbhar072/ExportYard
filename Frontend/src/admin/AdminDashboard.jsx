@@ -1,14 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
-  Users,
-  UserPlus,
-  RefreshCw,
   AlertCircle,
+  ArrowRight,
+  MessageSquare,
+  RefreshCw,
+  UserPlus,
+  Users,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
 ).replace(/\/+$/, "");
+
+const STATUS_STYLES = {
+  new: "bg-amber-50 text-amber-800 ring-amber-700/15",
+  contacted: "bg-sky-50 text-sky-800 ring-sky-700/15",
+  quoted: "bg-violet-50 text-violet-800 ring-violet-700/15",
+  negotiating: "bg-orange-50 text-orange-800 ring-orange-700/15",
+  converted: "bg-emerald-50 text-emerald-800 ring-emerald-700/15",
+  closed: "bg-slate-100 text-slate-700 ring-slate-600/15",
+};
 
 function formatDate(date) {
   if (!date) return "—";
@@ -18,100 +31,142 @@ function formatDate(date) {
   if (Number.isNaN(parsed.getTime())) return "—";
 
   return parsed.toLocaleDateString("en-IN", {
-    day: "2-digit",
+    day: "numeric",
     month: "short",
     year: "numeric",
   });
 }
 
+function StatCard({ label, value, note, icon: Icon }) {
+  return (
+    <article className="min-w-0 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-slate-600">{label}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-[#071c30] sm:text-4xl">
+            {value}
+          </p>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#f7f1e4] text-[#8b641f]">
+          <Icon size={19} aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-slate-500">{note}</p>
+    </article>
+  );
+}
+
 export default function AdminDashboard() {
+  const { token } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadDashboard = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(`${API_URL}/api/admin/dashboard`, {
+  const loadDashboard = useCallback(() => {
+    return fetch(`${API_URL}/api/admin/dashboard`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
+      .then(async (response) => {
+        const result = await response.json();
 
-      const result = await response.json();
+        if (!response.ok || result.success === false) {
+          throw new Error(result.message || "Unable to load dashboard.");
+        }
 
-      if (!response.ok) {
-        throw new Error(result.message || "Unable to load dashboard");
-      }
+        if (!result.data) {
+          throw new Error("The server returned incomplete dashboard data.");
+        }
 
-      setData(result.data);
-    } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setData(result.data);
+        setError("");
+      })
+      .catch((requestError) => {
+        setError(
+          requestError.message ||
+            "Unable to connect to the dashboard service."
+        );
+      })
+      .finally(() => setLoading(false));
+  }, [token]);
 
   useEffect(() => {
-    loadDashboard();
+    void loadDashboard();
   }, [loadDashboard]);
+
+  function refreshDashboard() {
+    setLoading(true);
+    void loadDashboard();
+  }
 
   const stats = [
     {
       label: "Total users",
       value: data?.totalUsers ?? "—",
+      note: "Registered accounts",
       icon: Users,
-      description: "All registered accounts",
     },
     {
       label: "New users",
       value: data?.recentUsersCount ?? "—",
+      note: "Joined in the last 7 days",
       icon: UserPlus,
-      description: "Registered in the last 7 days",
+    },
+    {
+      label: "Total enquiries",
+      value: data?.totalEnquiries ?? "—",
+      note: "Buyer and supplier enquiries",
+      icon: MessageSquare,
+    },
+    {
+      label: "New enquiries",
+      value: data?.newEnquiriesCount ?? "—",
+      note: "Waiting for a first response",
+      icon: MessageSquare,
     },
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="mx-auto max-w-7xl space-y-7 sm:space-y-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0e7f91]">
-            Overview
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#0a1628]">
+          <p className="text-sm font-medium text-[#8b641f]">Overview</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#071c30] sm:text-3xl">
             Dashboard
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Monitor registered users on ExportYard.
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+            A quick view of your accounts and the latest trade enquiries.
           </p>
         </div>
-
         <button
-          onClick={loadDashboard}
+          type="button"
+          onClick={refreshDashboard}
           disabled={loading}
-          className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-[#ffc58f] px-5 py-2.5 text-xs font-semibold tracking-[0.08em] text-[#10222e] transition hover:-translate-y-px hover:bg-[#ffd7b0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0a1628] disabled:opacity-60 disabled:hover:translate-y-0 sm:self-auto"
+          className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-[#172536] transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f] disabled:cursor-wait disabled:opacity-60 sm:self-auto"
         >
           <RefreshCw
-            size={15}
+            size={16}
             className={loading ? "animate-spin" : ""}
+            aria-hidden="true"
           />
-          REFRESH
+          Refresh
         </button>
-      </div>
+      </header>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          <AlertCircle size={19} className="mt-0.5 shrink-0" />
-          <div>
-            <p className="font-semibold">Couldn't load dashboard</p>
-            <p className="mt-1">{error}</p>
+        <div
+          className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          role="alert"
+        >
+          <AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Dashboard data couldn’t be loaded</p>
+            <p className="mt-1 break-words">{error}</p>
             <button
-              onClick={loadDashboard}
-              className="mt-2 font-semibold underline"
+              type="button"
+              onClick={refreshDashboard}
+              className="mt-2 font-semibold underline underline-offset-2"
             >
               Try again
             </button>
@@ -119,100 +174,144 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {stats.map(({ label, value, icon: Icon, description }) => (
-          <div
-            key={label}
-            className="rounded-2xl border border-[#0a1628]/10 border-l-4 border-l-[#38bdd0] bg-white p-6 shadow-sm"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">
-                  {label}
-                </p>
-                <p className="mt-3 text-4xl font-bold tracking-tight text-[#0a1628]">
-                  {loading ? "..." : value}
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0a1628] text-[#ffc58f]">
-                <Icon size={22} />
-              </div>
-            </div>
-            <p className="mt-4 text-xs text-slate-500">{description}</p>
-          </div>
-        ))}
-      </div>
-
-      <section className="overflow-hidden rounded-2xl border border-[#0a1628]/10 bg-white shadow-sm">
-        <div className="border-b border-[#38bdd0]/20 px-6 py-5">
-          <h2 className="text-lg font-semibold text-[#0a1628]">
-            Recent registrations
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            The five newest user accounts.
-          </p>
+      <section aria-label="Platform statistics">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <StatCard
+              key={stat.label}
+              {...stat}
+              value={loading ? "…" : stat.value}
+            />
+          ))}
         </div>
+      </section>
 
-        {loading ? (
-          <p className="p-6 text-sm text-slate-500">
-            Loading registrations...
-          </p>
-        ) : !data?.recentUsers?.length ? (
-          <p className="p-6 text-sm text-slate-500">
-            No registrations found.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#0a1628] text-xs uppercase tracking-wide text-white/80">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">User</th>
-                  <th className="px-6 py-4 font-semibold">Email</th>
-                  <th className="px-6 py-4 font-semibold">Role</th>
-                  <th className="px-6 py-4 font-semibold">Registered</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.recentUsers.map((user) => (
-                  <tr
-                    key={user._id}
-                    className="transition hover:bg-[#38bdd0]/5"
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.85fr)]">
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-5">
+            <div>
+              <h3 className="font-semibold text-[#071c30]">Recent enquiries</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                The latest buyer and supplier requests.
+              </p>
+            </div>
+            <Link
+              to="/admin/enquiries"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#765111] hover:text-[#071c30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f]"
+            >
+              All enquiries <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+
+          {loading && !data ? (
+            <p className="px-4 py-8 text-sm text-slate-500 sm:px-5">
+              Loading enquiries…
+            </p>
+          ) : !data?.recentEnquiries?.length ? (
+            <p className="px-4 py-8 text-sm text-slate-500 sm:px-5">
+              {error ? "Enquiries are unavailable right now." : "No enquiries yet."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {data.recentEnquiries.map((enquiry) => {
+                const status = enquiry.status || "New";
+
+                return (
+                  <li
+                    key={enquiry._id}
+                    className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
                   >
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0a1628] text-sm font-semibold text-[#ffc58f]">
-                          {(user.name || "?").charAt(0).toUpperCase()}
-                        </div>
-                        <span className="font-medium text-[#0a1628]">
-                          {user.name}
-                        </span>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                        <MessageSquare size={16} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-[#172536]">
+                          {enquiry.productName || "Product enquiry"}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-slate-500">
+                          {enquiry.name} <span aria-hidden="true">·</span>{" "}
+                          {enquiry.enquiryType || "Buyer"}
+                        </p>
                       </div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-slate-600">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4">
+                    </div>
+                    <div className="flex items-center justify-between gap-3 pl-12 sm:shrink-0 sm:pl-0">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                          user.role === "admin"
-                            ? "bg-[#ffc58f]/40 text-[#10222e]"
-                            : "bg-[#38bdd0]/15 text-[#0b5f6e]"
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                          STATUS_STYLES[status.toLowerCase()] ||
+                          STATUS_STYLES.closed
                         }`}
                       >
-                        {user.role || "user"}
+                        {status}
                       </span>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-slate-500">
-                      {formatDate(user.createdAt)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <time
+                        className="text-xs text-slate-500"
+                        dateTime={enquiry.createdAt || undefined}
+                      >
+                        {formatDate(enquiry.createdAt)}
+                      </time>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-5">
+            <div>
+              <h3 className="font-semibold text-[#071c30]">New accounts</h3>
+              <p className="mt-1 text-sm text-slate-500">
+                The latest registered users.
+              </p>
+            </div>
+            <Link
+              to="/admin/users"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#765111] hover:text-[#071c30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f]"
+            >
+              All users <ArrowRight size={15} aria-hidden="true" />
+            </Link>
           </div>
-        )}
-      </section>
+
+          {loading && !data ? (
+            <p className="px-4 py-8 text-sm text-slate-500 sm:px-5">
+              Loading users…
+            </p>
+          ) : !data?.recentUsers?.length ? (
+            <p className="px-4 py-8 text-sm text-slate-500 sm:px-5">
+              {error ? "Accounts are unavailable right now." : "No accounts yet."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {data.recentUsers.map((user) => (
+                <li
+                  key={user._id}
+                  className="flex min-w-0 items-center gap-3 px-4 py-3.5 sm:px-5"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f7f1e4] text-sm font-semibold text-[#765111]">
+                    {(user.name || "?").charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[#172536]">
+                      {user.name || "Unnamed account"}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {user.email}
+                    </p>
+                  </div>
+                  <time
+                    className="shrink-0 text-xs text-slate-500"
+                    dateTime={user.createdAt || undefined}
+                  >
+                    {formatDate(user.createdAt)}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
