@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Menu, X, LogOut, Check } from "lucide-react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Menu, X, LogOut } from "lucide-react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useNotification } from "../context/useNotification.js";
 
 const SCROLL_OFFSET = 40;
 
@@ -10,15 +11,17 @@ const Navbar = () => {
   const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [toast, setToast] = useState(false);
 
   const cancelRef = useRef(null);
   const { user, isLoggedIn, logout } = useAuth();
+  const notify = useNotification();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const close = () => setNavOpen(false);
   const firstName = user?.name?.trim().split(/\s+/)[0] || "User";
   const isAdmin = isLoggedIn && user?.role === "admin";
+  const solidHeader = scrolled || location.pathname === "/enquiry";
 
   // Open the logout confirmation dialog
   function askLogout() {
@@ -30,7 +33,7 @@ const Navbar = () => {
   function confirmLogout() {
     logout();
     setConfirmOpen(false);
-    setToast(true);
+    notify("You’re logged out.");
     navigate("/", { replace: true });
   }
 
@@ -77,21 +80,12 @@ const Navbar = () => {
     };
   }, [confirmOpen]);
 
-  // Hide success notification after 3 seconds
-  useEffect(() => {
-    if (!toast) return;
-
-    const t = setTimeout(() => setToast(false), 3000);
-
-    return () => clearTimeout(t);
-  }, [toast]);
-
   return (
     <>
       {/* Styles are injected once here and apply to the portals as well */}
       <style>{css}</style>
 
-      <header className={`nv-header${scrolled ? " is-scrolled" : ""}`}>
+      <header className={`nv-header${solidHeader ? " is-scrolled" : ""}`}>
         <div className="nv-bar">
           {/* Logo */}
           <Link
@@ -145,9 +139,14 @@ const Navbar = () => {
               </Link>
             )}
 
-            <Link to="/enquiry" className="nv-link nv-cta">
-              REQUEST A ENQUIRY
-            </Link>
+            <NavLink
+              to="/enquiry"
+              className={({ isActive }) =>
+                `nv-link nv-cta${isActive ? " is-active" : ""}`
+              }
+            >
+              SEND AN ENQUIRY
+            </NavLink>
           </div>
 
           {/* Mobile menu button */}
@@ -214,7 +213,7 @@ const Navbar = () => {
               className="nv-link nv-cta nv-m-cta"
               onClick={close}
             >
-              REQUEST ENQUIRY
+              SEND AN ENQUIRY
             </Link>
           </nav>
         )}
@@ -265,27 +264,6 @@ const Navbar = () => {
           document.body
         )}
 
-      {/* Logout success notification */}
-      {toast &&
-        createPortal(
-          <div className="nv-toast" role="status" aria-live="polite">
-            <span className="nv-toast-icon">
-              <Check size={16} />
-            </span>
-
-            <span>Logged out successfully</span>
-
-            <button
-              type="button"
-              className="nv-toast-close"
-              onClick={() => setToast(false)}
-              aria-label="Dismiss notification"
-            >
-              <X size={16} />
-            </button>
-          </div>,
-          document.body
-        )}
     </>
   );
 };
@@ -558,65 +536,6 @@ const css = `
   border: 0;
 }
 
-/* ---------- logout success notification ---------- */
-.nv-toast {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 110;
-  display: flex;
-  align-items: center;
-  gap: .65rem;
-  max-width: calc(100vw - 2rem);
-  padding: .8rem .9rem .8rem 1rem;
-  font-size: .85rem;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(10,22,40,.98);
-  border: 1px solid rgba(56,189,208,.3);
-  border-left: 3px solid #38bdd0;
-  border-radius: 12px;
-  box-shadow: 0 16px 40px -12px rgba(0,0,0,.65);
-  animation: nv-slide .3s ease;
-}
-
-.nv-toast-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  color: #10222e;
-  background: #38bdd0;
-}
-
-.nv-toast-close {
-  display: inline-flex;
-  padding: .25rem;
-  margin-left: .25rem;
-  color: rgba(255,255,255,.6);
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.nv-toast-close:hover {
-  color: #fff;
-}
-
-.nv-toast-close:focus-visible {
-  outline: 2px solid #ffd9a0;
-  outline-offset: 2px;
-}
-
-@keyframes nv-slide {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: none; }
-}
-
 @keyframes nv-fade {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -643,8 +562,7 @@ const css = `
   .nv-link,
   .nv-about::after,
   .nv-overlay,
-  .nv-dialog,
-  .nv-toast {
+  .nv-dialog {
     transition: none;
     animation: none;
   }

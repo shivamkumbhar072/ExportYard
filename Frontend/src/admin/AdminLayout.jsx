@@ -4,10 +4,6 @@ import {
   Users as UsersIcon,
   MessageSquare,
 } from "lucide-react";
-import Footer from "../Homepage/Footer";
-import Navbar from "../Homepage/Navbar";
-
-
 const navigation = [
   {
     label: "Dashboard",
@@ -30,12 +26,12 @@ const navigation = [
 export default function AdminLayout() {
   const token = localStorage.getItem("token");
 
-  let user = null;
+  let user;
 
   try {
     user = JSON.parse(localStorage.getItem("user") || "null");
   } catch {
-    user = null;
+    return <Navigate to="/login" replace />;
   }
 
   if (!token || !user) {
@@ -48,8 +44,6 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      {/* Same Navbar as the public site (logout dialog + toast included) */}
-
       {/* Navy band: sits behind the transparent navbar so its white text stays readable */}
       <section className="border-b border-[rgba(56,189,208,0.2)] bg-[#0a1628] pt-24">
         <div className="mx-auto max-w-6xl px-6 pb-5">

@@ -1,28 +1,36 @@
-
 const mongoose = require("mongoose");
 
 const enquirySchema = new mongoose.Schema(
   {
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    enquiryType: {
+      type: String,
+      enum: ["Buyer", "Supplier"],
+      default: "Buyer",
+      required: true,
+    },
     productName: {
       type: String,
-      default: "Bottled Mineral Water",
+      required: true,
       trim: true,
+      maxlength: 150,
     },
-
     name: {
       type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-
     companyName: {
       type: String,
       trim: true,
       maxlength: 150,
       default: "",
     },
-
     email: {
       type: String,
       required: true,
@@ -30,71 +38,83 @@ const enquirySchema = new mongoose.Schema(
       lowercase: true,
       maxlength: 254,
     },
-
     whatsappCountryCode: {
       type: String,
       required: true,
       trim: true,
       maxlength: 6,
     },
-
     whatsappNumber: {
       type: String,
       required: true,
       trim: true,
       maxlength: 20,
     },
-
-    destinationCountry: {
+    originCountry: {
       type: String,
-      required: true,
       trim: true,
       maxlength: 100,
+      default: "",
     },
-
-    bottleSize: {
+    destinationCountry: {
       type: String,
-      required: true,
-      enum: ["250 ml", "330 ml", "500 ml", "1 L", "1.5 L", "5 L", "Other"],
+      trim: true,
+      maxlength: 100,
+      default: "",
     },
-
-    quantity: {
-      type: Number,
-      required: true,
-      min: 1,
-    },
-
-    quantityUnit: {
+    requestedQuantity: {
       type: String,
-      required: true,
-      enum: ["bottles", "cartons", "20ft container", "40ft container"],
+      trim: true,
+      maxlength: 100,
+      default: "",
     },
-
-    packagingPreference: {
+    targetTimeline: {
       type: String,
-      enum: ["PET bottles", "Private label", "Custom packaging", "Other"],
-      default: "PET bottles",
+      trim: true,
+      maxlength: 100,
+      default: "",
     },
-
     destinationPort: {
       type: String,
       trim: true,
       maxlength: 150,
       default: "",
     },
+    requirements: {
+      type: String,
+      trim: true,
+      maxlength: 3000,
+      default: "",
+    },
+    whatsappConsent: {
+      type: Boolean,
+      default: false,
+    },
 
+    // Retained for enquiries submitted before the form became product-agnostic.
+    bottleSize: {
+      type: String,
+      enum: ["250 ml", "330 ml", "500 ml", "1 L", "1.5 L", "5 L", "Other"],
+    },
+    quantity: {
+      type: Number,
+      min: 1,
+    },
+    quantityUnit: {
+      type: String,
+      enum: ["", "bottles", "cartons", "20ft container", "40ft container"],
+      default: "",
+    },
+    packagingPreference: {
+      type: String,
+      enum: ["PET bottles", "Private label", "Custom packaging", "Other"],
+    },
     additionalRequirements: {
       type: String,
       trim: true,
       maxlength: 2000,
       default: "",
     },
-
-    whatsappConsent: {
-      type: Boolean,
-      default: false,
-    },
-
     status: {
       type: String,
       enum: ["New", "Contacted", "Quoted", "Negotiating", "Converted", "Closed"],

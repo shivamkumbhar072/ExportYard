@@ -1,384 +1,229 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
-import {
-  Send,
-  CheckCircle2,
-  ArrowLeft,
-  LoaderCircle,
-  ChevronDown,
-  Search,
-  Check,
-  X,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, CheckCircle2, Send } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
+import { useNotification } from "../context/useNotification.js";
+import countryCallingCodes from "../data/countryCallingCodes.js";
 
-// adjust this path to match where your AuthContext file lives
-import { useAuth } from "../context/AuthContext";
-
-const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(
+  /\/+$/,
+  ""
+);
 
 const initialForm = {
+  enquiryType: "Buyer",
   name: "",
   companyName: "",
   email: "",
+  whatsappCountry: "India",
   whatsappCountryCode: "+91",
   whatsappNumber: "",
+  productName: "",
+  originCountry: "",
   destinationCountry: "",
-  bottleSize: "1 L",
-  quantity: "",
-  quantityUnit: "bottles",
-  packagingPreference: "PET bottles",
+  requestedQuantity: "",
   destinationPort: "",
-  additionalRequirements: "",
+  targetTimeline: "",
+  requirements: "",
   whatsappConsent: false,
 };
 
-/* [name, ISO code, dial code] */
-const RAW_COUNTRIES = [
-  ["Afghanistan", "AF", "+93"],
-  ["Algeria", "DZ", "+213"],
-  ["Angola", "AO", "+244"],
-  ["Argentina", "AR", "+54"],
-  ["Armenia", "AM", "+374"],
-  ["Australia", "AU", "+61"],
-  ["Austria", "AT", "+43"],
-  ["Azerbaijan", "AZ", "+994"],
-  ["Bahrain", "BH", "+973"],
-  ["Bangladesh", "BD", "+880"],
-  ["Belgium", "BE", "+32"],
-  ["Bhutan", "BT", "+975"],
-  ["Brazil", "BR", "+55"],
-  ["Cambodia", "KH", "+855"],
-  ["Cameroon", "CM", "+237"],
-  ["Canada", "CA", "+1"],
-  ["Chile", "CL", "+56"],
-  ["China", "CN", "+86"],
-  ["Colombia", "CO", "+57"],
-  ["Côte d'Ivoire", "CI", "+225"],
-  ["Czech Republic", "CZ", "+420"],
-  ["Denmark", "DK", "+45"],
-  ["Egypt", "EG", "+20"],
-  ["Ethiopia", "ET", "+251"],
-  ["Fiji", "FJ", "+679"],
-  ["Finland", "FI", "+358"],
-  ["France", "FR", "+33"],
-  ["Georgia", "GE", "+995"],
-  ["Germany", "DE", "+49"],
-  ["Ghana", "GH", "+233"],
-  ["Greece", "GR", "+30"],
-  ["Hong Kong", "HK", "+852"],
-  ["Hungary", "HU", "+36"],
-  ["India", "IN", "+91"],
-  ["Indonesia", "ID", "+62"],
-  ["Iran", "IR", "+98"],
-  ["Iraq", "IQ", "+964"],
-  ["Ireland", "IE", "+353"],
-  ["Israel", "IL", "+972"],
-  ["Italy", "IT", "+39"],
-  ["Japan", "JP", "+81"],
-  ["Jordan", "JO", "+962"],
-  ["Kazakhstan", "KZ", "+7"],
-  ["Kenya", "KE", "+254"],
-  ["Kuwait", "KW", "+965"],
-  ["Laos", "LA", "+856"],
-  ["Lebanon", "LB", "+961"],
-  ["Libya", "LY", "+218"],
-  ["Madagascar", "MG", "+261"],
-  ["Malaysia", "MY", "+60"],
-  ["Maldives", "MV", "+960"],
-  ["Mauritius", "MU", "+230"],
-  ["Mexico", "MX", "+52"],
-  ["Mongolia", "MN", "+976"],
-  ["Morocco", "MA", "+212"],
-  ["Mozambique", "MZ", "+258"],
-  ["Myanmar", "MM", "+95"],
-  ["Nepal", "NP", "+977"],
-  ["Netherlands", "NL", "+31"],
-  ["New Zealand", "NZ", "+64"],
-  ["Nigeria", "NG", "+234"],
-  ["Norway", "NO", "+47"],
-  ["Oman", "OM", "+968"],
-  ["Pakistan", "PK", "+92"],
-  ["Papua New Guinea", "PG", "+675"],
-  ["Peru", "PE", "+51"],
-  ["Philippines", "PH", "+63"],
-  ["Poland", "PL", "+48"],
-  ["Portugal", "PT", "+351"],
-  ["Qatar", "QA", "+974"],
-  ["Romania", "RO", "+40"],
-  ["Russia", "RU", "+7"],
-  ["Saudi Arabia", "SA", "+966"],
-  ["Senegal", "SN", "+221"],
-  ["Seychelles", "SC", "+248"],
-  ["Singapore", "SG", "+65"],
-  ["South Africa", "ZA", "+27"],
-  ["South Korea", "KR", "+82"],
-  ["Spain", "ES", "+34"],
-  ["Sri Lanka", "LK", "+94"],
-  ["Sudan", "SD", "+249"],
-  ["Sweden", "SE", "+46"],
-  ["Switzerland", "CH", "+41"],
-  ["Syria", "SY", "+963"],
-  ["Taiwan", "TW", "+886"],
-  ["Tanzania", "TZ", "+255"],
-  ["Thailand", "TH", "+66"],
-  ["Tunisia", "TN", "+216"],
-  ["Turkey", "TR", "+90"],
-  ["Uganda", "UG", "+256"],
-  ["Ukraine", "UA", "+380"],
-  ["United Arab Emirates", "AE", "+971"],
-  ["United Kingdom", "GB", "+44"],
-  ["United States", "US", "+1"],
-  ["Uzbekistan", "UZ", "+998"],
-  ["Vietnam", "VN", "+84"],
-  ["Yemen", "YE", "+967"],
-  ["Zambia", "ZM", "+260"],
-  ["Zimbabwe", "ZW", "+263"],
-];
+const labelClass =
+  "flex flex-col gap-2 text-sm font-medium text-[#14243a]";
+const inputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-[#14243a] outline-none transition placeholder:text-slate-400 focus:border-[#16899b] focus:ring-4 focus:ring-[#16899b]/10";
 
-// India first (default), everything else alphabetical
-const COUNTRIES = RAW_COUNTRIES.map(([name, iso, dial]) => ({
-  name,
-  iso,
-  dial,
-})).sort((a, b) => {
-  if (a.iso === "IN") return -1;
-  if (b.iso === "IN") return 1;
-  return a.name.localeCompare(b.name);
-});
+function updateMeta(selector, attribute, value) {
+  let element = document.head.querySelector(selector);
+  const created = !element;
 
-/* shared Tailwind class strings */
-const labelCls =
-  "flex flex-col gap-2 text-xs font-semibold tracking-wide text-white/80";
-
-const fieldBase =
-  "rounded-xl border border-white/20 bg-white/5 text-sm font-normal text-white outline-none transition [color-scheme:dark] placeholder:text-white/35 focus:border-[#38bdd0] focus:bg-white/10 focus:ring-2 focus:ring-[#38bdd0]/25";
-
-const fieldCls = `w-full px-4 py-3 ${fieldBase}`;
-
-const selectCls = `${fieldCls} [&>option]:bg-[#0a1628] [&>option]:text-white`;
-
-const peachButton =
-  "inline-flex items-center justify-center gap-2 rounded-full bg-[#ffc58f] px-7 py-3.5 text-xs font-semibold tracking-[0.08em] text-[#10222e] transition hover:-translate-y-px hover:bg-[#ffd7b0] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#ffd9a0] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
-
-function SectionHeading({ step, title, subtitle }) {
-  return (
-    <div className="flex items-center gap-4">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ffc58f]/40 bg-[#ffc58f]/10 text-xs font-bold text-[#ffc58f]">
-        {step}
-      </span>
-      <div>
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        <p className="text-sm text-white/60">{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
-/* Searchable country-code dropdown */
-function CountryCodeSelect({ value, onChange }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [active, setActive] = useState(0);
-  const [pickedIso, setPickedIso] = useState("IN");
-
-  const wrapRef = useRef(null);
-  const buttonRef = useRef(null);
-  const searchRef = useRef(null);
-  const listRef = useRef(null);
-
-  // several countries share a dial code (e.g. +1), so remember which one was picked
-  const selected =
-    COUNTRIES.find((c) => c.iso === pickedIso && c.dial === value) ||
-    COUNTRIES.find((c) => c.dial === value);
-
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase().replace(/^\+/, "");
-    if (!q) return COUNTRIES;
-
-    return COUNTRIES.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.dial.replace("+", "").startsWith(q) ||
-        c.iso.toLowerCase() === q
-    );
-  }, [query]);
-
-  function openList() {
-    setActive(Math.max(0, COUNTRIES.indexOf(selected)));
-    setOpen(true);
-  }
-
-  function closeList() {
-    setOpen(false);
-    setQuery("");
-  }
-
-  function choose(country) {
-    setPickedIso(country.iso);
-    onChange(country.dial);
-    closeList();
-    buttonRef.current?.focus();
-  }
-
-  // close when clicking outside
-  useEffect(() => {
-    if (!open) return;
-
-    const onDown = (e) => {
-      if (!wrapRef.current?.contains(e.target)) closeList();
-    };
-
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  // focus the search box when the list opens
-  useEffect(() => {
-    if (open) searchRef.current?.focus();
-  }, [open]);
-
-  // keep the highlighted row in view
-  useEffect(() => {
-    if (!open) return;
-    listRef.current
-      ?.querySelector('[data-active="true"]')
-      ?.scrollIntoView({ block: "nearest" });
-  }, [active, open, results]);
-
-  function onSearchKey(e) {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActive((i) => Math.min(results.length - 1, i + 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(0, i - 1));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (results[active]) choose(results[active]);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      closeList();
-      buttonRef.current?.focus();
-    } else if (e.key === "Tab") {
-      closeList();
+  if (!element) {
+    element = document.createElement("meta");
+    if (attribute === "name") {
+      element.name = selector.match(/name="([^"]+)"/)?.[1] || "";
+    } else {
+      element.setAttribute(attribute, selector.match(/property="([^"]+)"/)?.[1] || "");
     }
+    document.head.appendChild(element);
   }
 
-  return (
-    <div ref={wrapRef} className="relative">
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => (open ? closeList() : openList())}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={`Country calling code, ${selected?.name || ""} ${value}`}
-        className={`flex w-full cursor-pointer items-center justify-between gap-1 px-3 py-3 ${fieldBase}`}
-      >
-        <span className="tabular-nums">{value}</span>
-        <ChevronDown
-          size={15}
-          className={`shrink-0 text-white/60 transition ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full z-30 mt-2 w-[min(19rem,calc(100vw_-_4.5rem))] overflow-hidden rounded-xl border border-[#38bdd0]/30 bg-[#0a1628] shadow-2xl shadow-black/60">
-          <div className="relative border-b border-white/10 p-2">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-white/40"
-            />
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setActive(0);
-              }}
-              onKeyDown={onSearchKey}
-              placeholder="Search country or code"
-              aria-label="Search country or calling code"
-              className="w-full rounded-lg border border-white/15 bg-white/5 py-2 pl-9 pr-3 text-sm text-white outline-none [color-scheme:dark] placeholder:text-white/35 focus:border-[#38bdd0]"
-            />
-          </div>
-
-          <ul
-            ref={listRef}
-            role="listbox"
-            aria-label="Country calling codes"
-            className="max-h-60 overflow-y-auto py-1"
-          >
-            {results.length === 0 ? (
-              <li className="px-4 py-6 text-center text-sm text-white/50">
-                No country found
-              </li>
-            ) : (
-              results.map((c, i) => {
-                const isSelected = selected === c;
-
-                return (
-                  <li
-                    key={c.iso}
-                    role="option"
-                    aria-selected={isSelected}
-                    data-active={i === active}
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => choose(c)}
-                    className={`flex cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm ${
-                      i === active ? "bg-[#38bdd0]/15" : ""
-                    } ${isSelected ? "text-[#ffc58f]" : "text-white"}`}
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      {isSelected && <Check size={14} className="shrink-0" />}
-                      <span className="truncate">{c.name}</span>
-                    </span>
-                    <span className="shrink-0 tabular-nums text-white/60">
-                      {c.dial}
-                    </span>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
+  const previous = element.content;
+  element.content = value;
+  return () => {
+    if (created) element.remove();
+    else element.content = previous;
+  };
 }
 
 export default function Enquiry() {
-  const { token, isLoggedIn, authLoading, logout } = useAuth();
   const location = useLocation();
-
-  const [form, setForm] = useState(initialForm);
+  const navigate = useNavigate();
+  const { token, user } = useAuth();
+  const notify = useNotification();
+  const [form, setForm] = useState(() => {
+    const draft = location.state?.draft;
+    const savedDraft = draft && typeof draft === "object" ? draft : {};
+    return {
+      ...initialForm,
+      ...savedDraft,
+      whatsappCountry:
+        savedDraft.whatsappCountry ||
+        countryCallingCodes.find(
+          ([, callingCode]) =>
+            callingCode === savedDraft.whatsappCountryCode
+        )?.[0] ||
+        "India",
+      name: savedDraft.name || user?.name || "",
+      email: savedDraft.email || user?.email || "",
+    };
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [toast, setToast] = useState(false);
+  const [submittedAs, setSubmittedAs] = useState("Buyer");
 
-  // success notification hides itself after 5 seconds
   useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(false), 5000);
-    return () => clearTimeout(t);
-  }, [toast]);
+    const previousTitle = document.title;
+    document.title = "Trade Enquiry | Buyers & Suppliers | ExportYard";
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
+    const cleanups = [
+      updateMeta(
+        'meta[name="description"]',
+        "name",
+        "Send ExportYard a buyer or supplier enquiry. Share your product, quantity, origin, destination and trade requirements with our team."
+      ),
+      updateMeta(
+        'meta[property="og:title"]',
+        "property",
+        "Trade Enquiry for Buyers and Suppliers | ExportYard"
+      ),
+      updateMeta(
+        'meta[property="og:description"]',
+        "property",
+        "Tell ExportYard what you want to source or supply and share your trade requirements."
+      ),
+    ];
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    const createdCanonical = !canonical;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    const previousCanonical = canonical.href;
+    canonical.href = "https://exportyard.com/enquiry";
+
+    return () => {
+      document.title = previousTitle;
+      cleanups.forEach((cleanup) => cleanup());
+      if (createdCanonical) canonical.remove();
+      else canonical.href = previousCanonical;
+    };
+  }, []);
+
+  function handleChange(event) {
+    const { name, value, checked, type } = event.target;
+    if (name === "whatsappCountry") {
+      const country = countryCallingCodes.find(([label]) => label === value);
+      setForm((current) => ({
+        ...current,
+        whatsappCountry: value,
+        whatsappCountryCode: country?.[1] || current.whatsappCountryCode,
+      }));
+      setFieldErrors((current) => ({
+        ...current,
+        whatsappCountry: "",
+        whatsappCountryCode: "",
+      }));
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
+    setFieldErrors((current) => ({ ...current, [name]: "" }));
+    setError("");
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  function validateForm() {
+    const errors = {};
+    const email = form.email.trim();
+    const phone = form.whatsappNumber.replace(/[\s()-]/g, "");
+    const callingCode = countryCallingCodes.find(
+      ([country]) => country === form.whatsappCountry
+    )?.[1];
+
+    if (form.name.trim().length < 2) {
+      errors.name = "Enter your name (at least 2 characters).";
+    } else if (form.name.trim().length > 100) {
+      errors.name = "Name cannot exceed 100 characters.";
+    }
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Enter a valid business email address.";
+    }
+    if (!callingCode || callingCode !== form.whatsappCountryCode) {
+      errors.whatsappCountry = "Choose a valid country calling code.";
+    }
+    if (!/^[0-9]{5,20}$/.test(phone)) {
+      errors.whatsappNumber = "Enter a phone number with 5 to 20 digits.";
+    }
+    if (!form.productName.trim()) {
+      errors.productName = "Enter the product or product category.";
+    } else if (form.productName.trim().length > 150) {
+      errors.productName = "Product name cannot exceed 150 characters.";
+    }
+
+    const maxLengths = {
+      companyName: 150,
+      originCountry: 100,
+      destinationCountry: 100,
+      requestedQuantity: 100,
+      targetTimeline: 100,
+      destinationPort: 150,
+      requirements: 3000,
+    };
+    for (const [field, maxLength] of Object.entries(maxLengths)) {
+      if (form[field].length > maxLength) {
+        errors[field] = `This field cannot exceed ${maxLength} characters.`;
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  function inputClassFor(field) {
+    return `${inputClass} ${
+      fieldErrors[field]
+        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+        : ""
+    }`;
+  }
+
+  function fieldError(field) {
+    return fieldErrors[field] ? (
+      <span className="text-sm font-normal text-red-600" role="alert">
+        {fieldErrors[field]}
+      </span>
+    ) : null;
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (!validateForm()) return;
 
     if (!token) {
-      setError("Please log in to submit an enquiry.");
+      navigate("/login", {
+        state: {
+          from: {
+            pathname: location.pathname,
+            state: { draft: form },
+          },
+          message: "Please log in to send your enquiry.",
+        },
+      });
       return;
     }
 
@@ -392,391 +237,444 @@ export default function Enquiry() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...form,
-          quantity: Number(form.quantity),
-        }),
+        body: JSON.stringify(form),
       });
 
-      const text = await response.text();
-      let data;
+      if (response.status === 401) {
+        navigate("/login", {
+          state: {
+            from: {
+              pathname: location.pathname,
+              state: { draft: form },
+            },
+            message: "Please log in again to send your enquiry.",
+          },
+        });
+        return;
+      }
 
+      const responseText = await response.text();
+      let data;
       try {
-        data = JSON.parse(text);
+        data = JSON.parse(responseText);
       } catch {
         throw new Error(
           "The server returned an invalid response. Please check the backend API URL."
         );
       }
 
-      // token expired / invalid -> log out so the user can sign in again
-      if (response.status === 401) {
-        logout();
-        throw new Error("Your session has expired. Please log in again.");
-      }
-
       if (!response.ok || data.success === false) {
         throw new Error(data.message || "Unable to submit your enquiry.");
       }
 
+      setSubmittedAs(form.enquiryType);
       setSubmitted(true);
       setForm(initialForm);
-      setToast(true);
-      // the success message is at the top, so bring the user back up to it
+      setFieldErrors({});
+      notify("Your enquiry was sent successfully.");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (submitError) {
+      setError(
+        submitError.message ||
+          "We could not send your enquiry. Please try again or email our team."
+      );
     } finally {
       setLoading(false);
     }
-  };
-
-  // wait until the saved session has been verified
-  if (authLoading) return null; // or show a spinner
-
-  // only logged-in users can send an enquiry
-  // (adjust "/login" to your actual login route)
-  if (!isLoggedIn) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-[#0a1628] px-4 pb-16 pt-24 text-white sm:px-6">
-      {/* success notification */}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 top-20 z-50 flex items-center gap-3 rounded-xl border border-[#38bdd0]/30 border-l-[3px] border-l-[#38bdd0] bg-[#0a1628] px-4 py-3 text-sm font-semibold shadow-2xl shadow-black/60 sm:left-auto sm:right-6 sm:w-auto sm:max-w-sm"
-        >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#38bdd0] text-[#10222e]">
-            <Check size={15} />
-          </span>
-          <span className="flex-1">Enquiry sent successfully</span>
-          <button
-            type="button"
-            onClick={() => setToast(false)}
-            aria-label="Dismiss notification"
-            className="inline-flex rounded-md p-1 text-white/60 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd9a0]"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-      {/* soft teal glow, like the hero */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[28rem] bg-[radial-gradient(ellipse_at_top,rgba(56,189,208,0.2),transparent_65%)]"
-      />
+  const isBuyer = form.enquiryType === "Buyer";
 
-      <div className="relative mx-auto max-w-5xl">
-        {/* Compact heading */}
-        <header className="mb-8">
+  return (
+    <main className="min-h-screen bg-[#f5f7f8] px-4 pb-20 pt-28 text-[#14243a] sm:px-6">
+      <div className="mx-auto max-w-6xl">
+        <header className="mb-10 max-w-3xl">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full py-1 text-sm text-white/70 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd9a0]"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-[#087f91]"
           >
-            <ArrowLeft size={16} /> Back to home
+            <ArrowRight className="rotate-180" size={16} />
+            Back to ExportYard
           </Link>
-
-          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#38bdd0]">
-            ExportYard · International trade
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#087f91]">
+            ExportYard · India trade connections
           </p>
-
-          <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight sm:text-3xl lg:text-4xl">
-            Let's discuss your{" "}
-            <span className="text-[#ffc58f]">water supply requirements.</span>
+          <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-[#0a1628] sm:text-5xl">
+            Let’s start a <span className="text-[#087f91]">trade conversation.</span>
           </h1>
-
-          <p className="mt-3 text-sm text-white/70 sm:text-base">
-            Tell us what you need and where. Our team will review it and get
-            back to you.
+          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            Whether you are looking to source products or supply them, tell us
+            what you need. Our team will review your details and get back to you.
           </p>
         </header>
 
-        {submitted ? (
-          <div className="mx-auto max-w-2xl rounded-3xl border border-[#38bdd0]/25 bg-[#0d1d33]/80 p-8 text-center shadow-2xl shadow-black/40 backdrop-blur sm:p-12">
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-[#38bdd0]/40 bg-[#38bdd0]/10 text-[#38bdd0]">
-              <CheckCircle2 size={34} />
-            </span>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-40px_rgba(10,22,40,.35)] sm:p-8">
+            {submitted ? (
+              <div className="py-10 text-center" role="status" aria-live="polite">
+                <CheckCircle2 className="mx-auto text-[#087f91]" size={52} />
+                <h2 className="mt-5 text-2xl font-bold text-[#0a1628]">
+                  Thanks — we’ve received your enquiry.
+                </h2>
+                <p className="mx-auto mt-3 max-w-lg leading-7 text-slate-600">
+                  Our team will review your {submittedAs === "Buyer" ? "sourcing" : "supplier"}{" "}
+                  requirements and contact you using the details provided.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="mt-7 rounded-full bg-[#0a1628] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#143453]"
+                >
+                  Send another enquiry
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} noValidate className="space-y-8">
+                <fieldset>
+                  <legend className="text-lg font-bold text-[#0a1628]">
+                    How can we help?
+                  </legend>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Choose the option that best describes your enquiry.
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {[
+                      ["Buyer", "I want to source products"],
+                      ["Supplier", "I have products to supply"],
+                    ].map(([value, description]) => (
+                      <label
+                        key={value}
+                        className={`flex cursor-pointer gap-3 rounded-2xl border p-4 transition ${
+                          form.enquiryType === value
+                            ? "border-[#087f91] bg-[#087f91]/5 ring-2 ring-[#087f91]/10"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="enquiryType"
+                          value={value}
+                          checked={form.enquiryType === value}
+                          onChange={handleChange}
+                          className="mt-1 accent-[#087f91]"
+                        />
+                        <span>
+                          <span className="block font-semibold text-[#0a1628]">
+                            {value}
+                          </span>
+                          <span className="mt-1 block text-sm text-slate-500">
+                            {description}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
 
-            <h2 className="mt-6 text-2xl font-bold">
-              Enquiry submitted successfully
-            </h2>
+                <div className="border-t border-slate-100 pt-7">
+                  <h2 className="text-lg font-bold text-[#0a1628]">
+                    Your contact details
+                  </h2>
+                  <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                    <label className={labelClass}>
+                      Full name *
+                      <input
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        autoComplete="name"
+                        placeholder="Your full name"
+                        required
+                        minLength={2}
+                        maxLength={100}
+                        aria-invalid={Boolean(fieldErrors.name)}
+                        aria-describedby={fieldErrors.name ? "enquiry-name-error" : undefined}
+                        className={inputClassFor("name")}
+                      />
+                      {fieldErrors.name && (
+                        <span id="enquiry-name-error">{fieldError("name")}</span>
+                      )}
+                    </label>
+                    <label className={labelClass}>
+                      Company
+                      <input
+                        name="companyName"
+                        value={form.companyName}
+                        onChange={handleChange}
+                        autoComplete="organization"
+                        placeholder="Company or organisation"
+                        maxLength={150}
+                        aria-invalid={Boolean(fieldErrors.companyName)}
+                        className={inputClassFor("companyName")}
+                      />
+                      {fieldError("companyName")}
+                    </label>
+                    <label className={labelClass}>
+                      Business email *
+                      <input
+                        type="email"
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        required
+                        maxLength={254}
+                        aria-invalid={Boolean(fieldErrors.email)}
+                        aria-describedby={fieldErrors.email ? "enquiry-email-error" : undefined}
+                        className={inputClassFor("email")}
+                      />
+                      {fieldErrors.email && (
+                        <span id="enquiry-email-error">{fieldError("email")}</span>
+                      )}
+                    </label>
+                    <div className={labelClass}>
+                      <label htmlFor="whatsappNumber">Phone / WhatsApp *</label>
+                      <div className="grid grid-cols-[minmax(0,11rem)_1fr] gap-2">
+                        <select
+                          aria-label="Country calling code"
+                          name="whatsappCountry"
+                          value={form.whatsappCountry}
+                          onChange={handleChange}
+                          required
+                          aria-invalid={Boolean(fieldErrors.whatsappCountry)}
+                          aria-describedby={
+                            fieldErrors.whatsappCountry
+                              ? "enquiry-country-error"
+                              : undefined
+                          }
+                          className={inputClassFor("whatsappCountry")}
+                        >
+                          {countryCallingCodes.map(([country, callingCode]) => (
+                            <option
+                              key={`${country}-${callingCode}`}
+                              value={country}
+                            >
+                              {country} ({callingCode})
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          id="whatsappNumber"
+                          type="tel"
+                          name="whatsappNumber"
+                          value={form.whatsappNumber}
+                          onChange={handleChange}
+                          autoComplete="tel-national"
+                          placeholder="Phone number"
+                          required
+                          maxLength={20}
+                          aria-invalid={Boolean(fieldErrors.whatsappNumber)}
+                          aria-describedby={
+                            fieldErrors.whatsappNumber ? "enquiry-phone-error" : undefined
+                          }
+                          className={inputClassFor("whatsappNumber")}
+                        />
+                      </div>
+                      {fieldErrors.whatsappCountry && (
+                        <span id="enquiry-country-error">
+                          {fieldError("whatsappCountry")}
+                        </span>
+                      )}
+                      {fieldErrors.whatsappNumber && (
+                        <span id="enquiry-phone-error">
+                          {fieldError("whatsappNumber")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/70">
-              Thank you for contacting ExportYard. Your requirements have been
-              submitted. Our team will review your enquiry.
-            </p>
+                <div className="border-t border-slate-100 pt-7">
+                  <h2 className="text-lg font-bold text-[#0a1628]">
+                    {isBuyer ? "What are you looking to source?" : "What can you supply?"}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Share as much detail as you have. You can leave unknown
+                    shipping details blank.
+                  </p>
+                  <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                    <label className={`${labelClass} sm:col-span-2`}>
+                      Product or product category *
+                      <input
+                        name="productName"
+                        value={form.productName}
+                        onChange={handleChange}
+                        placeholder="For example, the product or category you need"
+                        required
+                        maxLength={150}
+                        aria-invalid={Boolean(fieldErrors.productName)}
+                        aria-describedby={
+                          fieldErrors.productName ? "enquiry-product-error" : undefined
+                        }
+                        className={inputClassFor("productName")}
+                      />
+                      {fieldErrors.productName && (
+                        <span id="enquiry-product-error">
+                          {fieldError("productName")}
+                        </span>
+                      )}
+                    </label>
+                    <label className={labelClass}>
+                      {isBuyer ? "Sourcing country" : "Supply origin"}
+                      <input
+                        name="originCountry"
+                        value={form.originCountry}
+                        onChange={handleChange}
+                        placeholder="Country"
+                        maxLength={100}
+                        aria-invalid={Boolean(fieldErrors.originCountry)}
+                        className={inputClassFor("originCountry")}
+                      />
+                      {fieldError("originCountry")}
+                    </label>
+                    <label className={labelClass}>
+                      {isBuyer ? "Delivery country" : "Markets you can serve"}
+                      <input
+                        name="destinationCountry"
+                        value={form.destinationCountry}
+                        onChange={handleChange}
+                        placeholder="Country or market"
+                        maxLength={100}
+                        aria-invalid={Boolean(fieldErrors.destinationCountry)}
+                        className={inputClassFor("destinationCountry")}
+                      />
+                      {fieldError("destinationCountry")}
+                    </label>
+                    <label className={labelClass}>
+                      Quantity and unit
+                      <input
+                        name="requestedQuantity"
+                        value={form.requestedQuantity}
+                        onChange={handleChange}
+                        placeholder="For example, 2 containers or 500 units"
+                        maxLength={100}
+                        aria-invalid={Boolean(fieldErrors.requestedQuantity)}
+                        className={inputClassFor("requestedQuantity")}
+                      />
+                      {fieldError("requestedQuantity")}
+                    </label>
+                    <label className={labelClass}>
+                      Target timeline
+                      <input
+                        name="targetTimeline"
+                        value={form.targetTimeline}
+                        onChange={handleChange}
+                        placeholder="When do you need this?"
+                        maxLength={100}
+                        aria-invalid={Boolean(fieldErrors.targetTimeline)}
+                        className={inputClassFor("targetTimeline")}
+                      />
+                      {fieldError("targetTimeline")}
+                    </label>
+                    <label className={`${labelClass} sm:col-span-2`}>
+                      Port or delivery details
+                      <input
+                        name="destinationPort"
+                        value={form.destinationPort}
+                        onChange={handleChange}
+                        placeholder="Port, city or preferred shipping terms"
+                        maxLength={150}
+                        aria-invalid={Boolean(fieldErrors.destinationPort)}
+                        className={inputClassFor("destinationPort")}
+                      />
+                      {fieldError("destinationPort")}
+                    </label>
+                    <label className={`${labelClass} sm:col-span-2`}>
+                      Requirements and message
+                      <textarea
+                        name="requirements"
+                        value={form.requirements}
+                        onChange={handleChange}
+                        placeholder="Specifications, packaging, certifications, target price, documents, or anything else we should know..."
+                        rows={5}
+                        maxLength={3000}
+                        aria-invalid={Boolean(fieldErrors.requirements)}
+                        className={`${inputClassFor("requirements")} resize-y`}
+                      />
+                      {fieldError("requirements")}
+                      <span className="text-right text-xs font-normal text-slate-400">
+                        {form.requirements.length}/3000
+                      </span>
+                    </label>
+                  </div>
+                </div>
 
-            <div className="mt-8 flex flex-col items-center gap-4">
-              <button
-                type="button"
-                onClick={() => setSubmitted(false)}
-                className={peachButton}
-              >
-                SUBMIT ANOTHER ENQUIRY
-              </button>
+                <label className="flex items-start gap-3 text-sm leading-6 text-slate-600">
+                  <input
+                    type="checkbox"
+                    name="whatsappConsent"
+                    checked={form.whatsappConsent}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 accent-[#087f91]"
+                  />
+                  <span>
+                    I agree to be contacted on WhatsApp about this enquiry.
+                  </span>
+                </label>
 
+                {error && (
+                  <p
+                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-500">
+                    {token
+                      ? "Your account will be linked to this enquiry. Your details are used only to respond."
+                      : "Log in is required to send this enquiry. Your form will be saved while you sign in."}
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0a1628] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#143453] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087f91] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Send size={16} />
+                    {loading
+                      ? "Sending..."
+                      : token
+                        ? "Send enquiry"
+                        : "Log in to send"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
+
+          <aside className="space-y-4 lg:sticky lg:top-28">
+            <div className="rounded-3xl bg-[#0a1628] p-6 text-white">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#72d3df]">
+                One enquiry, one team
+              </p>
+              <h2 className="mt-3 text-xl font-bold">
+                Sourcing or supplying, start here.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-white/70">
+                Share your product, trade direction and requirements. We’ll
+                review the details and follow up with the next steps.
+              </p>
+            </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-6">
+              <h2 className="font-bold text-[#0a1628]">A useful enquiry includes</h2>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                <li>Product name or category</li>
+                <li>Approximate quantity and timeline</li>
+                <li>Origin, destination or target market</li>
+                <li>Specifications and certifications</li>
+              </ul>
               <Link
-                to="/"
-                className="text-sm text-white/70 underline-offset-4 transition hover:text-white hover:underline"
+                to="/privacy-policy"
+                className="mt-5 inline-block text-sm font-semibold text-[#087f91] underline-offset-4 hover:underline"
               >
-                Return to homepage
+                Read our privacy policy
               </Link>
             </div>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-7 rounded-3xl border border-[#38bdd0]/25 bg-[#0d1d33]/80 p-5 shadow-2xl shadow-black/40 backdrop-blur sm:p-8"
-          >
-            {/* Step 1 */}
-            <SectionHeading
-              step="01"
-              title="Your details"
-              subtitle="How can we contact you?"
-            />
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label className={labelCls}>
-                Full name *
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="Your full name"
-                  autoComplete="name"
-                  required
-                  maxLength={100}
-                  className={fieldCls}
-                />
-              </label>
-
-              <label className={labelCls}>
-                Company name
-                <input
-                  name="companyName"
-                  value={form.companyName}
-                  onChange={handleChange}
-                  placeholder="Your company"
-                  autoComplete="organization"
-                  maxLength={150}
-                  className={fieldCls}
-                />
-              </label>
-
-              <label className={labelCls}>
-                Business email *
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                  required
-                  maxLength={254}
-                  className={fieldCls}
-                />
-              </label>
-
-              <div className={labelCls}>
-                <label htmlFor="whatsappNumber">WhatsApp number *</label>
-                <div className="grid grid-cols-[6.25rem_1fr] gap-2">
-                  <CountryCodeSelect
-                    value={form.whatsappCountryCode}
-                    onChange={(dial) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        whatsappCountryCode: dial,
-                      }))
-                    }
-                  />
-                  <input
-                    id="whatsappNumber"
-                    type="tel"
-                    name="whatsappNumber"
-                    value={form.whatsappNumber}
-                    onChange={handleChange}
-                    placeholder="Phone number"
-                    autoComplete="tel-national"
-                    required
-                    maxLength={20}
-                    className={fieldCls}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="border-t border-white/10 pt-7">
-              <SectionHeading
-                step="02"
-                title="Product requirements"
-                subtitle="Tell us about your order."
-              />
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <label className={labelCls}>
-                Destination country *
-                <input
-                  name="destinationCountry"
-                  value={form.destinationCountry}
-                  onChange={handleChange}
-                  placeholder="e.g. UAE, Maldives"
-                  required
-                  maxLength={100}
-                  className={fieldCls}
-                />
-              </label>
-
-              <label className={labelCls}>
-                Bottle size *
-                <select
-                  name="bottleSize"
-                  value={form.bottleSize}
-                  onChange={handleChange}
-                  required
-                  className={selectCls}
-                >
-                  {[
-                    "250 ml",
-                    "330 ml",
-                    "500 ml",
-                    "1 L",
-                    "1.5 L",
-                    "5 L",
-                    "Other",
-                  ].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className={labelCls}>
-                Required quantity *
-                <input
-                  type="number"
-                  name="quantity"
-                  value={form.quantity}
-                  onChange={handleChange}
-                  placeholder="Enter quantity"
-                  min="1"
-                  step="1"
-                  required
-                  className={fieldCls}
-                />
-              </label>
-
-              <label className={labelCls}>
-                Quantity unit *
-                <select
-                  name="quantityUnit"
-                  value={form.quantityUnit}
-                  onChange={handleChange}
-                  required
-                  className={selectCls}
-                >
-                  <option value="bottles">Bottles</option>
-                  <option value="cartons">Cartons</option>
-                  <option value="20ft container">20 ft container</option>
-                  <option value="40ft container">40 ft container</option>
-                </select>
-              </label>
-
-              <label className={labelCls}>
-                Packaging preference *
-                <select
-                  name="packagingPreference"
-                  value={form.packagingPreference}
-                  onChange={handleChange}
-                  required
-                  className={selectCls}
-                >
-                  <option value="PET bottles">Standard PET bottles</option>
-                  <option value="Private label">Private label</option>
-                  <option value="Custom packaging">Custom packaging</option>
-                  <option value="Other">Other</option>
-                </select>
-              </label>
-
-              <label className={labelCls}>
-                Destination port
-                <input
-                  name="destinationPort"
-                  value={form.destinationPort}
-                  onChange={handleChange}
-                  placeholder="e.g. Port of Jebel Ali"
-                  maxLength={150}
-                  className={fieldCls}
-                />
-              </label>
-            </div>
-
-            <label className={labelCls}>
-              Additional requirements
-              <textarea
-                name="additionalRequirements"
-                value={form.additionalRequirements}
-                onChange={handleChange}
-                placeholder="Share your target price, delivery timeline, specifications or other requirements..."
-                rows={3}
-                maxLength={3000}
-                className={`${fieldCls} resize-y`}
-              />
-            </label>
-
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-white/75">
-              <input
-                type="checkbox"
-                name="whatsappConsent"
-                checked={form.whatsappConsent}
-                onChange={handleChange}
-                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#ffc58f]"
-              />
-              <span>
-                I agree to be contacted on WhatsApp regarding this enquiry.
-              </span>
-            </label>
-
-            {error && (
-              <p
-                role="alert"
-                className="rounded-xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-              >
-                {error}
-              </p>
-            )}
-
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="order-2 text-xs text-white/50 sm:order-1">
-                Submitting this form sends your requirements to ExportYard for
-                follow-up.
-              </p>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className={`${peachButton} order-1 w-full sm:order-2 sm:w-auto`}
-              >
-                {loading ? (
-                  <>
-                    <LoaderCircle className="animate-spin" size={17} />
-                    SUBMITTING...
-                  </>
-                ) : (
-                  <>
-                    SUBMIT ENQUIRY <Send size={16} />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        )}
+          </aside>
+        </div>
       </div>
     </main>
   );

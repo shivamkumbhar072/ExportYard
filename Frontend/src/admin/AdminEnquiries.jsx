@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Search,
   RefreshCw,
@@ -8,8 +8,10 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useNotification } from "../context/useNotification.js";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -65,13 +67,14 @@ function getWhatsAppUrl(enquiry) {
 
   if (!fullNumber) return null;
 
-  const message = `Hello ${enquiry.name}, thank you for your enquiry to ExportYard regarding bottled mineral water. We would be happy to discuss your requirements.`;
+  const message = `Hello ${enquiry.name}, thank you for your ${String(enquiry.enquiryType || "trade").toLowerCase()} enquiry to ExportYard about ${enquiry.productName || "your trade requirements"}. We would be happy to discuss the next steps.`;
 
   return `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
 }
 
 export default function AdminEnquiries() {
   const { token } = useAuth();
+  const notify = useNotification();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -85,6 +88,10 @@ export default function AdminEnquiries() {
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
   const [updatingId, setUpdatingId] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingId, setDeletingId] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const deleteCancelRef = useRef(null);
 
   const loadEnquiries = useCallback(async () => {
     if (!token) return;
@@ -152,6 +159,18 @@ export default function AdminEnquiries() {
     };
   }, [selected]);
 
+  useEffect(() => {
+    if (!deleteTarget) return;
+
+    const onKey = (event) => {
+      if (event.key === "Escape" && !deletingId) setDeleteTarget(null);
+    };
+
+    window.addEventListener("keydown", onKey);
+    deleteCancelRef.current?.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deleteTarget, deletingId]);
+
   async function updateStatus(enquiryId, status) {
     setUpdatingId(enquiryId);
     setError("");
@@ -184,10 +203,48 @@ export default function AdminEnquiries() {
       setSelected((current) =>
         current?._id === enquiryId ? data.enquiry : current
       );
+      notify("Enquiry status updated.");
     } catch (err) {
       setError(err.message || "Unable to update enquiry.");
     } finally {
       setUpdatingId("");
+    }
+  }
+
+  async function deleteEnquiry() {
+    if (!deleteTarget || deletingId) return;
+
+    const enquiryId = deleteTarget._id;
+    setDeletingId(enquiryId);
+    setDeleteError("");
+
+    try {
+      const response = await fetch(`${API_URL}/api/enquiries/${enquiryId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to delete enquiry.");
+      }
+
+      setItems((current) => current.filter((item) => item._id !== enquiryId));
+      setPagination((current) => ({
+        ...current,
+        total: Math.max(0, current.total - 1),
+        totalPages: Math.ceil(Math.max(0, current.total - 1) / current.limit),
+      }));
+      setSelected((current) => (current?._id === enquiryId ? null : current));
+      setDeleteTarget(null);
+      if (items.length === 1 && page > 1) {
+        setPage((current) => current - 1);
+      }
+      notify("Enquiry deleted successfully.");
+    } catch (err) {
+      setDeleteError(err.message || "Unable to delete enquiry.");
+    } finally {
+      setDeletingId("");
     }
   }
 
@@ -213,10 +270,10 @@ export default function AdminEnquiries() {
             Sales workspace
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-[#0a1628]">
-            Product enquiries
+            Trade enquiries
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Manage bottled mineral water enquiries from international buyers.
+            Review and manage sourcing enquiries from buyers and offers from suppliers.
           </p>
         </div>
 
@@ -244,7 +301,7 @@ export default function AdminEnquiries() {
               setSearch(event.target.value);
               setPage(1);
             }}
-            placeholder="Search buyer, company, email or country..."
+            placeholder="Search contact, company, product or country..."
             aria-label="Search enquiries"
             className="w-full rounded-full border border-[#0a1628]/20 bg-white py-2.5 pl-11 pr-4 text-sm text-[#0a1628] outline-none transition placeholder:text-slate-400 focus:border-[#38bdd0] focus:ring-2 focus:ring-[#38bdd0]/25"
           />
@@ -306,9 +363,10 @@ export default function AdminEnquiries() {
             <table className="w-full text-left text-sm">
               <thead className="bg-[#0a1628] text-xs uppercase tracking-wide text-white/80">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Buyer</th>
-                  <th className="px-6 py-4 font-semibold">Destination</th>
-                  <th className="px-6 py-4 font-semibold">Product / quantity</th>
+                  <th className="px-6 py-4 font-semibold">Submitted by</th>
+                  <th className="px-6 py-4 font-semibold">Contact</th>
+                  <th className="px-6 py-4 font-semibold">Type</th>
+                  <th className="px-6 py-4 font-semibold">Product / requirement</th>
                   <th className="px-6 py-4 font-semibold">Status</th>
                   <th className="px-6 py-4 font-semibold">Received</th>
                   <th className="px-6 py-4 font-semibold">Actions</th>
@@ -323,6 +381,15 @@ export default function AdminEnquiries() {
                   >
                     <td className="whitespace-nowrap px-6 py-4">
                       <strong className="block font-medium text-[#0a1628]">
+                        {item.submittedBy?.name || "No linked account"}
+                      </strong>
+                      <span className="mt-0.5 block text-xs text-slate-500">
+                        {item.submittedBy?.email ||
+                          "Legacy enquiry or account unavailable"}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <strong className="block font-medium text-[#0a1628]">
                         {item.name}
                       </strong>
                       <span className="mt-0.5 block text-xs text-slate-500">
@@ -331,16 +398,18 @@ export default function AdminEnquiries() {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4 text-slate-600">
-                      {item.destinationCountry}
+                      {item.enquiryType || "Buyer"}
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4">
                       <strong className="block font-medium text-[#0a1628]">
-                        {item.bottleSize}
+                        {item.productName || item.bottleSize || "Product enquiry"}
                       </strong>
                       <span className="mt-0.5 block text-xs text-slate-500">
-                        {Number(item.quantity).toLocaleString()}{" "}
-                        {item.quantityUnit}
+                        {item.requestedQuantity ||
+                          (item.quantity
+                            ? `${Number(item.quantity).toLocaleString()} ${item.quantityUnit || ""}`.trim()
+                            : "Quantity not specified")}
                       </span>
                     </td>
 
@@ -388,6 +457,18 @@ export default function AdminEnquiries() {
                           title="WhatsApp buyer"
                         >
                           <MessageCircle size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 text-red-700 transition hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                          onClick={() => {
+                            setDeleteError("");
+                            setDeleteTarget(item);
+                          }}
+                          aria-label={`Delete enquiry from ${item.name}`}
+                          title="Delete enquiry"
+                        >
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -462,21 +543,32 @@ export default function AdminEnquiries() {
             <div className="space-y-6 p-6">
               <dl className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
                 {[
+                  [
+                    "Submitted by (account)",
+                    selected.submittedBy
+                      ? `${selected.submittedBy.name} (${selected.submittedBy.email})`
+                      : "No linked account",
+                  ],
                   ["Email", selected.email],
+                  ["Enquiry type", selected.enquiryType || "Buyer"],
                   ["Company", selected.companyName || "Not provided"],
                   [
                     "WhatsApp",
                     `${selected.whatsappCountryCode || ""} ${selected.whatsappNumber || ""}`.trim() ||
                       "Not provided",
                   ],
-                  ["Destination", selected.destinationCountry],
-                  ["Bottle size", selected.bottleSize],
+                  ["Product", selected.productName || selected.bottleSize || "Not provided"],
+                  ["Origin / supply", selected.originCountry || "Not provided"],
+                  ["Destination / market", selected.destinationCountry || "Not provided"],
                   [
                     "Quantity",
-                    `${Number(selected.quantity).toLocaleString()} ${selected.quantityUnit}`,
+                    selected.requestedQuantity ||
+                      (selected.quantity
+                        ? `${Number(selected.quantity).toLocaleString()} ${selected.quantityUnit || ""}`.trim()
+                        : "Not provided"),
                   ],
-                  ["Packaging", selected.packagingPreference],
-                  ["Destination port", selected.destinationPort || "Not provided"],
+                  ["Target timeline", selected.targetTimeline || "Not provided"],
+                  ["Port / delivery", selected.destinationPort || "Not provided"],
                   ["Received", formatDate(selected.createdAt, true)],
                   ["Status", selected.status],
                 ].map(([label, value]) => (
@@ -493,15 +585,27 @@ export default function AdminEnquiries() {
 
               <div className="rounded-xl border border-[#0a1628]/10 bg-slate-50 p-4">
                 <p className="text-xs font-medium text-slate-500">
-                  Additional requirements
+                  Requirements and message
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
-                  {selected.additionalRequirements ||
+                  {selected.requirements ||
+                    selected.additionalRequirements ||
                     "No additional requirements provided."}
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  className={`${outlineButton} border-red-200 text-red-700 hover:bg-red-50`}
+                  onClick={() => {
+                    setDeleteError("");
+                    setDeleteTarget(selected);
+                  }}
+                >
+                  <Trash2 size={15} />
+                  DELETE ENQUIRY
+                </button>
                 <button
                   type="button"
                   className={outlineButton}
@@ -518,6 +622,57 @@ export default function AdminEnquiries() {
                   CONTACT ON WHATSAPP
                 </button>
               </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#050c18]/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingId) {
+              setDeleteTarget(null);
+            }
+          }}
+        >
+          <section
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-enquiry-title"
+            aria-describedby="delete-enquiry-description"
+          >
+            <h2 id="delete-enquiry-title" className="text-xl font-bold text-[#0a1628]">
+              Delete this enquiry?
+            </h2>
+            <p id="delete-enquiry-description" className="mt-3 text-sm leading-6 text-slate-600">
+              This permanently deletes the enquiry from {deleteTarget.name}. This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {deleteError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                ref={deleteCancelRef}
+                className={outlineButton}
+                disabled={Boolean(deletingId)}
+                onClick={() => setDeleteTarget(null)}
+              >
+                CANCEL
+              </button>
+              <button
+                type="button"
+                className={`${pillButton} bg-red-700 text-white hover:bg-red-800`}
+                disabled={Boolean(deletingId)}
+                onClick={deleteEnquiry}
+              >
+                <Trash2 size={15} />
+                {deletingId === deleteTarget._id ? "DELETING..." : "DELETE"}
+              </button>
             </div>
           </section>
         </div>

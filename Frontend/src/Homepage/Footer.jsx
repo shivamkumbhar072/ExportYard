@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 
 const EMAIL = "contact@exportyard.com";
@@ -14,12 +13,23 @@ const Footer = () => {
           <img src="/Images/logo.png" alt="ExportYard logo" />
         </Link>
 
-        {/* Company links */}
-        <nav className="ft-col" aria-label="Footer">
+        <div className="ft-brand-copy">
+          <strong>Trade connections from India.</strong>
+          <p>For buyers sourcing products and suppliers ready to reach new markets.</p>
+        </div>
+
+        <nav className="ft-col" aria-label="Company">
           <h2 className="ft-heading">Company</h2>
           <Link to="/about" className="ft-link">
             About
           </Link>
+          <Link to="/enquiry" className="ft-link">
+            Send an enquiry
+          </Link>
+        </nav>
+
+        <nav className="ft-col" aria-label="Legal">
+          <h2 className="ft-heading">Legal</h2>
           <Link to="/privacy-policy" className="ft-link">
             Privacy Policy
           </Link>
@@ -28,9 +38,8 @@ const Footer = () => {
           </Link>
         </nav>
 
-        {/* Enquiries */}
         <div className="ft-col">
-          <h2 className="ft-heading">Enquiries</h2>
+          <h2 className="ft-heading">Contact</h2>
           <a href={`mailto:${EMAIL}`} className="ft-link">
             {EMAIL}
           </a>
@@ -60,6 +69,7 @@ const css = `
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
+  align-items: start;
 }
 
 .ft-logo {
@@ -79,6 +89,18 @@ const css = `
   flex-direction: column;
   align-items: flex-start;
   gap: .6rem;
+}
+
+.ft-brand-copy {
+  max-width: 18rem;
+  color: rgba(255,255,255,.82);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+.ft-brand-copy p {
+  margin: .45rem 0 0;
+  color: rgba(255,255,255,.58);
 }
 
 .ft-heading {
@@ -122,9 +144,15 @@ const css = `
 
 @media (min-width: 640px) {
   .ft-inner {
-    grid-template-columns: 1fr auto auto;
-    gap: 4rem;
-    align-items: start;
+    grid-template-columns: minmax(10rem, 1.5fr) repeat(4, auto);
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 800px) and (min-width: 640px) {
+  .ft-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
   }
 }
 

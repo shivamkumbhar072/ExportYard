@@ -1,31 +1,7 @@
-
 const mongoose = require("mongoose");
 const Enquiry = require("../models/Enquiry");
 
-const ALLOWED_BOTTLE_SIZES = [
-  "250 ml",
-  "330 ml",
-  "500 ml",
-  "1 L",
-  "1.5 L",
-  "5 L",
-  "Other",
-];
-
-const ALLOWED_UNITS = [
-  "bottles",
-  "cartons",
-  "20ft container",
-  "40ft container",
-];
-
-const ALLOWED_PACKAGING = [
-  "PET bottles",
-  "Private label",
-  "Custom packaging",
-  "Other",
-];
-
+const ALLOWED_TYPES = ["Buyer", "Supplier"];
 const ALLOWED_STATUSES = [
   "New",
   "Contacted",
@@ -35,33 +11,41 @@ const ALLOWED_STATUSES = [
   "Closed",
 ];
 
-// PUBLIC: Submit an enquiry
+const optionalText = (value) => (typeof value === "string" ? value.trim() : "");
+
+// PUBLIC: Submit a buyer or supplier enquiry.
 const createEnquiry = async (req, res) => {
   try {
     const {
+      enquiryType,
+      productName,
       name,
       companyName,
       email,
       whatsappCountryCode,
       whatsappNumber,
+      originCountry,
       destinationCountry,
-      bottleSize,
-      quantity,
-      quantityUnit,
-      packagingPreference,
+      requestedQuantity,
+      targetTimeline,
       destinationPort,
-      additionalRequirements,
+      requirements,
       whatsappConsent,
     } = req.body;
 
+    if (!ALLOWED_TYPES.includes(enquiryType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Choose whether you are enquiring as a buyer or supplier",
+      });
+    }
+
     const requiredStrings = {
+      productName,
       name,
       email,
       whatsappCountryCode,
       whatsappNumber,
-      destinationCountry,
-      bottleSize,
-      quantityUnit,
     };
 
     for (const [field, value] of Object.entries(requiredStrings)) {
@@ -73,18 +57,21 @@ const createEnquiry = async (req, res) => {
       }
     }
 
-    if (
-      name.trim().length < 2 ||
-      name.trim().length > 100
-    ) {
+    if (name.trim().length < 2 || name.trim().length > 100) {
       return res.status(400).json({
         success: false,
         message: "Name must be between 2 and 100 characters",
       });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    if (productName.trim().length > 150) {
+      return res.status(400).json({
+        success: false,
+        message: "Product name cannot exceed 150 characters",
+      });
+    }
 
+    const normalizedEmail = email.trim().toLowerCase();
     if (
       normalizedEmail.length > 254 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
@@ -95,7 +82,8 @@ const createEnquiry = async (req, res) => {
       });
     }
 
-    if (!/^\+?[0-9]{1,5}$/.test(whatsappCountryCode.trim())) {
+    const normalizedCountryCode = whatsappCountryCode.trim();
+    if (!/^\+?[0-9]{1,5}$/.test(normalizedCountryCode)) {
       return res.status(400).json({
         success: false,
         message: "Enter a valid WhatsApp country code",
@@ -103,7 +91,6 @@ const createEnquiry = async (req, res) => {
     }
 
     const normalizedWhatsapp = whatsappNumber.replace(/[\s()-]/g, "");
-
     if (!/^[0-9]{5,20}$/.test(normalizedWhatsapp)) {
       return res.status(400).json({
         success: false,
@@ -111,75 +98,42 @@ const createEnquiry = async (req, res) => {
       });
     }
 
-    if (!ALLOWED_BOTTLE_SIZES.includes(bottleSize)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid bottle size",
-      });
-    }
+    const textFields = {
+      companyName: [companyName, 150],
+      originCountry: [originCountry, 100],
+      destinationCountry: [destinationCountry, 100],
+      requestedQuantity: [requestedQuantity, 100],
+      targetTimeline: [targetTimeline, 100],
+      destinationPort: [destinationPort, 150],
+      requirements: [requirements, 3000],
+    };
 
-    if (!ALLOWED_UNITS.includes(quantityUnit)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid quantity unit",
-      });
-    }
-
-    if (
-      !Number.isSafeInteger(Number(quantity)) ||
-      Number(quantity) < 1 ||
-      Number(quantity) > 1000000000
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Quantity must be a valid positive whole number",
-      });
-    }
-
-    if (
-      packagingPreference &&
-      !ALLOWED_PACKAGING.includes(packagingPreference)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid packaging preference",
-      });
-    }
-
-    if (
-      typeof additionalRequirements === "string" &&
-      additionalRequirements.length > 2000
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Additional requirements cannot exceed 2000 characters",
-      });
+    for (const [field, [value, maxLength]] of Object.entries(textFields)) {
+      if (typeof value === "string" && value.trim().length > maxLength) {
+        return res.status(400).json({
+          success: false,
+          message: `${field} cannot exceed ${maxLength} characters`,
+        });
+      }
     }
 
     const enquiry = await Enquiry.create({
+      submittedBy: req.user.userId,
+      enquiryType,
+      productName: productName.trim(),
       name: name.trim(),
-      companyName:
-        typeof companyName === "string"
-          ? companyName.trim()
-          : "",
+      companyName: optionalText(companyName),
       email: normalizedEmail,
-      whatsappCountryCode: whatsappCountryCode.trim().startsWith("+")
-        ? whatsappCountryCode.trim()
-        : `+${whatsappCountryCode.trim()}`,
+      whatsappCountryCode: normalizedCountryCode.startsWith("+")
+        ? normalizedCountryCode
+        : `+${normalizedCountryCode}`,
       whatsappNumber: normalizedWhatsapp,
-      destinationCountry: destinationCountry.trim(),
-      bottleSize,
-      quantity: Number(quantity),
-      quantityUnit,
-      packagingPreference: packagingPreference || "PET bottles",
-      destinationPort:
-        typeof destinationPort === "string"
-          ? destinationPort.trim()
-          : "",
-      additionalRequirements:
-        typeof additionalRequirements === "string"
-          ? additionalRequirements.trim()
-          : "",
+      originCountry: optionalText(originCountry),
+      destinationCountry: optionalText(destinationCountry),
+      requestedQuantity: optionalText(requestedQuantity),
+      targetTimeline: optionalText(targetTimeline),
+      destinationPort: optionalText(destinationPort),
+      requirements: optionalText(requirements),
       whatsappConsent: whatsappConsent === true,
     });
 
@@ -190,7 +144,6 @@ const createEnquiry = async (req, res) => {
     });
   } catch (error) {
     console.error("Create enquiry error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to submit enquiry",
@@ -198,30 +151,26 @@ const createEnquiry = async (req, res) => {
   }
 };
 
-// ADMIN: List, search and paginate enquiries
+// ADMIN: List, search and paginate enquiries.
 const getEnquiries = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(
-      50,
-      Math.max(1, parseInt(req.query.limit, 10) || 10)
-    );
-
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const search =
       typeof req.query.search === "string"
         ? req.query.search.trim().slice(0, 100)
         : "";
-
     const filter = {};
 
     if (search) {
       const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(escapedSearch, "i");
-
       filter.$or = [
         { name: regex },
         { companyName: regex },
         { email: regex },
+        { productName: regex },
+        { originCountry: regex },
         { destinationCountry: regex },
         { whatsappNumber: regex },
       ];
@@ -237,6 +186,7 @@ const getEnquiries = async (req, res) => {
     const [enquiries, total] = await Promise.all([
       Enquiry.find(filter)
         .select("-__v")
+        .populate("submittedBy", "name email")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -256,7 +206,6 @@ const getEnquiries = async (req, res) => {
     });
   } catch (error) {
     console.error("Get enquiries error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to fetch enquiries",
@@ -264,7 +213,7 @@ const getEnquiries = async (req, res) => {
   }
 };
 
-// ADMIN: Get one enquiry
+// ADMIN: Get one enquiry.
 const getEnquiryById = async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -274,8 +223,9 @@ const getEnquiryById = async (req, res) => {
       });
     }
 
-    const enquiry = await Enquiry.findById(req.params.id).select("-__v");
-
+    const enquiry = await Enquiry.findById(req.params.id)
+      .select("-__v")
+      .populate("submittedBy", "name email");
     if (!enquiry) {
       return res.status(404).json({
         success: false,
@@ -283,13 +233,9 @@ const getEnquiryById = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      enquiry,
-    });
+    return res.status(200).json({ success: true, enquiry });
   } catch (error) {
     console.error("Get enquiry error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to fetch enquiry",
@@ -297,7 +243,7 @@ const getEnquiryById = async (req, res) => {
   }
 };
 
-// ADMIN: Update enquiry status
+// ADMIN: Update enquiry status.
 const updateEnquiryStatus = async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -308,7 +254,6 @@ const updateEnquiryStatus = async (req, res) => {
     }
 
     const { status } = req.body;
-
     if (!ALLOWED_STATUSES.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -320,7 +265,9 @@ const updateEnquiryStatus = async (req, res) => {
       req.params.id,
       { $set: { status } },
       { new: true, runValidators: true }
-    ).select("-__v");
+    )
+      .select("-__v")
+      .populate("submittedBy", "name email");
 
     if (!enquiry) {
       return res.status(404).json({
@@ -336,7 +283,6 @@ const updateEnquiryStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Update enquiry status error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to update enquiry",
@@ -344,7 +290,38 @@ const updateEnquiryStatus = async (req, res) => {
   }
 };
 
-// ADMIN: Enquiry dashboard counts
+// ADMIN: Delete an enquiry.
+const deleteEnquiry = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid enquiry ID",
+      });
+    }
+
+    const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
+    if (!enquiry) {
+      return res.status(404).json({
+        success: false,
+        message: "Enquiry not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Enquiry deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete enquiry error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete enquiry",
+    });
+  }
+};
+
+// ADMIN: Enquiry dashboard counts.
 const getEnquiryStats = async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
@@ -366,7 +343,6 @@ const getEnquiryStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Get enquiry stats error:", error.message);
-
     return res.status(500).json({
       success: false,
       message: "Unable to fetch enquiry statistics",
@@ -379,5 +355,6 @@ module.exports = {
   getEnquiries,
   getEnquiryById,
   updateEnquiryStatus,
+  deleteEnquiry,
   getEnquiryStats,
 };

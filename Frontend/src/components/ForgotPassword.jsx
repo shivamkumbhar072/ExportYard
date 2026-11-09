@@ -3,24 +3,21 @@ import { Link } from "react-router-dom";
 
 import { forgotPassword } from "../services/api";
 import AuthShell from "../components/AuthShell.jsx";
+import { useNotification } from "../context/useNotification.js";
 
 const isValidEmail = (value) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
 export default function ForgotPassword() {
+  const notify = useNotification();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [sent, setSent] = useState(false); // hide form after send
 
   const errorRef = useRef(null);
-
-  // Clear errors when user edits
-  useEffect(() => {
-    if (error) setError("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
 
   // Scroll error into view
   useEffect(() => {
@@ -36,14 +33,22 @@ export default function ForgotPassword() {
     setError("");
     setMessage("");
 
-    if (!email.trim()) return setError("Please enter your email.");
-    if (!isValidEmail(email)) return setError("Enter a valid email address.");
+    if (!email.trim()) {
+      setEmailError("Email is required.");
+      return;
+    }
+    if (email.trim().length > 254 || !isValidEmail(email)) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+    setEmailError("");
 
     setLoading(true);
     try {
       const result = await forgotPassword({ email: email.trim().toLowerCase() });
       setMessage(result.message || "If that email is registered, a reset link has been sent.");
       setSent(true); // ← hides the form and the send-link button
+      notify("If that email is registered, a reset link has been sent.");
     } catch (err) {
       const status = err?.response?.status;
       let msg = err?.response?.data?.message || err?.message || "Something went wrong.";
@@ -109,18 +114,30 @@ export default function ForgotPassword() {
             id="fp-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError("");
+              setError("");
+              setMessage("");
+            }}
             autoComplete="email"
             placeholder="you@company.com"
+            required
+            maxLength={254}
             disabled={loading}
-            aria-invalid={!!error}
-            aria-describedby={error ? "fp-email-error" : undefined}
+            aria-invalid={Boolean(emailError)}
+            aria-describedby={emailError ? "fp-email-error" : undefined}
             className={`w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition disabled:bg-gray-50 disabled:text-gray-500 ${
-              error
+              emailError
                 ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
                 : "border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
             }`}
           />
+          {emailError && (
+            <p id="fp-email-error" role="alert" className="mt-1.5 text-sm text-red-600">
+              {emailError}
+            </p>
+          )}
         </div>
 
         {/* Server / validation error — red */}

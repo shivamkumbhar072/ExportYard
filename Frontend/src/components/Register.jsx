@@ -3,38 +3,79 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import { registerUser, loginUser, sendSignupOtp } from "../services/api";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useNotification } from "../context/useNotification.js";
 import AuthShell from "../components/AuthShell.jsx";
 
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoggedIn, login } = useAuth();
+  const notify = useNotification();
   const redirectTo = location.state?.from?.pathname || "/";
+  const redirectState = location.state?.from?.state;
 
   const [form, setForm] = useState({ name: "", email: "", password: "", otp: "" });
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const set = (key) => (event) => {
+    setForm((current) => ({ ...current, [key]: event.target.value }));
+    setFieldErrors((current) => ({ ...current, [key]: "" }));
+    setError("");
+  };
+  const setOtp = (event) => {
+    setForm((current) => ({
+      ...current,
+      otp: event.target.value.replace(/\D/g, "").slice(0, 6),
+    }));
+    setFieldErrors((current) => ({ ...current, otp: "" }));
+    setError("");
+  };
+
+  const fieldClass = (key) =>
+    `w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition focus:ring-2 disabled:bg-gray-50 disabled:text-gray-500 ${
+      fieldErrors[key]
+        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+        : "border-gray-300 focus:border-gray-900 focus:ring-gray-200"
+    }`;
+
+  const fieldError = (key) =>
+    fieldErrors[key] ? (
+      <p id={`reg-${key}-error`} role="alert" className="mt-1.5 text-sm text-red-600">
+        {fieldErrors[key]}
+      </p>
+    ) : null;
 
   const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+
+  function validateEmail() {
+    const email = form.email.trim();
+    const emailError = !email
+      ? "Email is required."
+      : email.length > 254 || !isValidEmail(email)
+        ? "Enter a valid email address."
+        : "";
+    setFieldErrors((current) => ({ ...current, email: emailError }));
+    return !emailError;
+  }
 
   async function handleSendOtp() {
     setMessage("");
     setError("");
 
     const email = form.email.trim().toLowerCase();
-    if (!email) return setError("Enter your email first.");
-    if (!isValidEmail(email)) return setError("Enter a valid email address.");
+    if (!validateEmail()) return;
 
     setLoading(true);
     try {
       await sendSignupOtp({ email });
       setOtpSent(true);
       setMessage("OTP sent to your email.");
+      notify("Verification code sent. Check your email.");
     } catch (err) {
       const status = err?.response?.status;
       let msg = err?.response?.data?.message || err?.message || "Failed to send OTP.";
@@ -56,12 +97,19 @@ export default function Register() {
     const email = form.email.trim().toLowerCase();
     const { password, otp } = form;
 
-    if (!name || !email || !password || !otp.trim()) {
-      return setError("Please fill in all fields.");
+    const errors = {};
+    if (name.length < 2) errors.name = "Name must be at least 2 characters.";
+    if (name.length > 100) errors.name = "Name cannot exceed 100 characters.";
+    if (!email) errors.email = "Email is required.";
+    else if (email.length > 254 || !isValidEmail(email)) {
+      errors.email = "Enter a valid email address.";
     }
+    if (otp.trim().length !== 6) errors.otp = "Enter the 6-digit verification code.";
     if (password.length < 8 || password.length > 72) {
-      return setError("Password must be between 8 and 72 characters.");
+      errors.password = "Password must be between 8 and 72 characters.";
     }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
 
     setLoading(true);
     try {
@@ -73,7 +121,8 @@ export default function Register() {
       }
 
       login(result.token, result.user);
-      navigate(redirectTo, { replace: true });
+      notify("Your ExportYard account is ready.");
+      navigate(redirectTo, { replace: true, state: redirectState });
     } catch (err) {
       const status = err?.response?.status;
       let msg = err?.response?.data?.message || err?.message || "Registration failed. Please try again.";
@@ -94,7 +143,9 @@ export default function Register() {
       >
         <button
           type="button"
-          onClick={() => navigate(redirectTo, { replace: true })}
+          onClick={() =>
+            navigate(redirectTo, { replace: true, state: redirectState })
+          }
           className="w-full rounded-lg bg-black px-4 py-2.5 font-medium text-white transition hover:bg-gray-800"
         >
           Continue
@@ -127,12 +178,17 @@ export default function Register() {
             type="text"
             value={form.name}
             onChange={set("name")}
+            required
+            minLength={2}
             maxLength={100}
             autoComplete="name"
             placeholder="Your name"
             disabled={loading}
-            className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby={fieldErrors.name ? "reg-name-error" : undefined}
+            className={fieldClass("name")}
           />
+          {fieldError("name")}
         </div>
 
         {/* Email + Send OTP */}
@@ -147,10 +203,14 @@ export default function Register() {
               value={form.email}
               onChange={set("email")}
               readOnly={otpSent}
+              required
+              maxLength={254}
               autoComplete="email"
               placeholder="you@company.com"
               disabled={loading}
-              className={`w-full flex-1 rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500 ${
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "reg-email-error" : undefined}
+              className={`flex-1 ${fieldClass("email")} ${
                 otpSent ? "bg-gray-50 text-gray-500" : ""
               }`}
             />
@@ -174,10 +234,16 @@ export default function Register() {
               </button>
             )}
           </div>
+          {fieldError("email")}
           {otpSent && (
             <button
               type="button"
-              onClick={() => setOtpSent(false)}
+              onClick={() => {
+                setOtpSent(false);
+                setForm((current) => ({ ...current, otp: "" }));
+                setFieldErrors({});
+                setMessage("");
+              }}
               className="mt-1.5 text-sm font-medium text-blue-600 hover:underline"
             >
               Change email
@@ -197,15 +263,18 @@ export default function Register() {
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
+                minLength={6}
+                required
                 value={form.otp}
-                onChange={(e) =>
-                  setForm({ ...form, otp: e.target.value.replace(/\D/g, "") })
-                }
+                onChange={setOtp}
                 autoComplete="one-time-code"
                 placeholder="123456"
                 disabled={loading}
-                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-center font-mono text-sm tracking-[0.4em] outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+                aria-invalid={Boolean(fieldErrors.otp)}
+                aria-describedby={fieldErrors.otp ? "reg-otp-error" : undefined}
+                className={`${fieldClass("otp")} text-center font-mono tracking-[0.4em]`}
               />
+              {fieldError("otp")}
             </div>
 
             {/* Password */}
@@ -219,12 +288,15 @@ export default function Register() {
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={set("password")}
+                  required
                   minLength={8}
                   maxLength={72}
                   autoComplete="new-password"
                   placeholder="At least 8 characters"
                   disabled={loading}
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-12 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={fieldErrors.password ? "reg-password-error" : undefined}
+                  className={`${fieldClass("password")} pr-12`}
                 />
                 <button
                   type="button"
@@ -236,6 +308,7 @@ export default function Register() {
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
+              {fieldError("password")}
             </div>
           </>
         )}

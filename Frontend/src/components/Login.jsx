@@ -4,6 +4,7 @@ import { GoogleLogin } from "@react-oauth/google";
 
 import { loginUser } from "../services/api";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useNotification } from "../context/useNotification.js";
 import AuthShell, { useFitWidth } from "../components/AuthShell.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -16,8 +17,10 @@ export default function Login() {
   const location = useLocation();
 
   const { login, isLoggedIn } = useAuth();
+  const notify = useNotification();
 
   const redirectTo = location.state?.from?.pathname || "/";
+  const redirectState = location.state?.from?.state;
   const successMessage = location.state?.message || "";
 
   const [form, setForm] = useState({ email: "", password: "" });
@@ -75,12 +78,6 @@ export default function Login() {
     };
   }, []);
 
-  // Clear server error when user edits
-  useEffect(() => {
-    if (message) setMessage("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.email, form.password]);
-
   // Scroll error into view
   useEffect(() => {
     if ((message || Object.keys(fieldErrors).length) && errorRef.current) {
@@ -93,12 +90,24 @@ export default function Login() {
     const email = form.email.trim();
 
     if (!email) errors.email = "Email is required.";
-    else if (!isValidEmail(email)) errors.email = "Enter a valid email address.";
+    else if (email.length > 254 || !isValidEmail(email)) {
+      errors.email = "Enter a valid email address.";
+    }
 
     if (!form.password) errors.password = "Password is required.";
+    else if (form.password.length > 72) {
+      errors.password = "Password cannot exceed 72 characters.";
+    }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
+  }
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: "" }));
+    setMessage("");
   }
 
   async function handleSubmit(event) {
@@ -121,7 +130,8 @@ export default function Login() {
       }
 
       login(result.token, result.user);
-      navigate(redirectTo, { replace: true });
+      notify("You’re logged in successfully.");
+      navigate(redirectTo, { replace: true, state: redirectState });
     } catch (error) {
       const status = error?.response?.status;
 
@@ -161,7 +171,8 @@ export default function Login() {
         throw new Error("Invalid Google authentication response.");
 
       login(data.token, data.user);
-      navigate(redirectTo, { replace: true });
+      notify("You’re logged in successfully.");
+      navigate(redirectTo, { replace: true, state: redirectState });
     } catch (error) {
       setMessage(error.message || "Google login failed. Please try again.");
     } finally {
@@ -183,7 +194,9 @@ export default function Login() {
         <button
           type="button"
           className="w-full rounded-lg bg-black px-4 py-2.5 text-white font-medium hover:bg-gray-800 transition"
-          onClick={() => navigate(redirectTo, { replace: true })}
+          onClick={() =>
+            navigate(redirectTo, { replace: true, state: redirectState })
+          }
         >
           Continue
         </button>
@@ -252,9 +265,10 @@ export default function Login() {
             name="email"
             placeholder="you@company.com"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={handleChange}
             autoComplete="email"
             required
+            maxLength={254}
             disabled={loading}
             aria-invalid={!!fieldErrors.email}
             aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
@@ -292,9 +306,10 @@ export default function Login() {
               name="password"
               placeholder="Enter your password"
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              onChange={handleChange}
               autoComplete="current-password"
               required
+              maxLength={72}
               disabled={loading}
               aria-invalid={!!fieldErrors.password}
               aria-describedby={

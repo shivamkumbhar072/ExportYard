@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const services = [
@@ -109,25 +109,27 @@ const About = () => {
         </div>
       </section>
 
-      {/* Products */}
+      {/* Trade partners */}
       <section className="ab-section" aria-labelledby="ab-products-title">
         <div className="ab-wrap">
           <h2 id="ab-products-title" className="ab-h2">
-            What we export
+            Built for both sides of trade
           </h2>
           <div className="ab-products">
             <div className="ab-product">
-              <h3>Available now</h3>
+              <h3>For buyers</h3>
               <p>
-                Packaged mineral water bottles, shipped in container loads.
+                Share the products, specifications, quantity and destination
+                market you need. We will review your sourcing request and
+                discuss suitable next steps.
               </p>
             </div>
 
             <div className="ab-product ab-product-accent">
-              <h3>Anything else, on request</h3>
+              <h3>For suppliers</h3>
               <p>
-                Looking for a different product? Send us an enquiry with what
-                you need and we will check what we can source for you.
+                Introduce your products, production capabilities and the
+                markets you can serve. Our team will follow up to learn more.
               </p>
             </div>
           </div>

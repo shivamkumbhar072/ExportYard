@@ -41,28 +41,13 @@ function MainLayout() {
   );
 }
 
-// Protected route
-function ProtectedRoute() {
-  const { isLoggedIn } = useAuth();
-  const location = useLocation();
-
-  return isLoggedIn ? (
-    <Outlet />
-  ) : (
-    <Navigate
-      to="/login"
-      state={{ from: location }}
-      replace
-    />
-  );
-}
-
 export default function App() {
   const { isLoggedIn } = useAuth();
   const location = useLocation();
 
-  // Get originally requested page
+  // Return users to the page that required login.
   const redirectTo = location.state?.from?.pathname || "/";
+  const redirectState = location.state?.from?.state;
 
   return (
     <Routes>
@@ -74,17 +59,15 @@ export default function App() {
         <Route path="/privacy-policy" element={<Privacy />} />
         <Route path="/about" element={<About />} />
 
-        {/* Protected Pages */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/enquiry" element={<Enquiry />} />
-        </Route>
+        {/* Enquiry forms are viewable without an account; submitting requires login. */}
+        <Route path="/enquiry" element={<Enquiry />} />
 
         {/* Login */}
         <Route
           path="/login"
           element={
             isLoggedIn ? (
-              <Navigate to={redirectTo} replace />
+              <Navigate to={redirectTo} state={redirectState} replace />
             ) : (
               <Login />
             )

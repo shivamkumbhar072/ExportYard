@@ -3,8 +3,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { resetPassword } from "../services/api";
 import AuthShell from "../components/AuthShell.jsx";
+import { useNotification } from "../context/useNotification.js";
 
 export default function ResetPassword() {
+  const notify = useNotification();
   const { token } = useParams();
   const navigate = useNavigate();
 
@@ -12,18 +14,13 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const errorRef = useRef(null);
-
-  // Clear errors on edit
-  useEffect(() => {
-    if (error) setError("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [password, confirm]);
 
   // Scroll error into view
   useEffect(() => {
@@ -33,19 +30,25 @@ export default function ResetPassword() {
   }, [error]);
 
   function validate() {
-    if (!password) return "Password is required.";
-    if (password.length < 8 || password.length > 72)
-      return "Password must be between 8 and 72 characters.";
-    if (password !== confirm) return "Passwords do not match.";
-    return "";
+    const errors = {};
+    if (!password) errors.password = "Password is required.";
+    else if (password.length < 8 || password.length > 72) {
+      errors.password = "Password must be between 8 and 72 characters.";
+    }
+    if (!confirm) errors.confirm = "Please confirm your new password.";
+    else if (password && password !== confirm) {
+      errors.confirm = "Passwords do not match.";
+    }
+    return errors;
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     if (loading) return;
 
-    const validationError = validate();
-    if (validationError) return setError(validationError);
+    const validationErrors = validate();
+    setFieldErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
 
     setLoading(true);
     setError("");
@@ -54,6 +57,7 @@ export default function ResetPassword() {
     try {
       const result = await resetPassword(token, { password });
       setSuccess(result.message || "Password updated successfully. Redirecting…");
+      notify("Password updated successfully.");
       setTimeout(() => navigate("/login", { replace: true }), 1500);
     } catch (err) {
       const status = err?.response?.status;
@@ -96,14 +100,21 @@ export default function ResetPassword() {
               id="rp-password"
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setFieldErrors((current) => ({ ...current, password: "" }));
+                setError("");
+              }}
               autoComplete="new-password"
               placeholder="Enter new password"
+              required
+              minLength={8}
+              maxLength={72}
               disabled={loading}
-              aria-invalid={!!error}
-              aria-describedby={error ? "rp-error" : undefined}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={fieldErrors.password ? "rp-password-error" : undefined}
               className={`w-full rounded-lg border px-3.5 py-2.5 pr-12 text-sm outline-none transition disabled:bg-gray-50 disabled:text-gray-500 ${
-                error
+                fieldErrors.password
                   ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
                   : "border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
               }`}
@@ -118,6 +129,11 @@ export default function ResetPassword() {
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
+          {fieldErrors.password && (
+            <p id="rp-password-error" role="alert" className="mt-1.5 text-sm text-red-600">
+              {fieldErrors.password}
+            </p>
+          )}
         </div>
 
         {/* Confirm password */}
@@ -135,14 +151,20 @@ export default function ResetPassword() {
               id="rp-confirm"
               type={showConfirm ? "text" : "password"}
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                setFieldErrors((current) => ({ ...current, confirm: "" }));
+                setError("");
+              }}
               autoComplete="new-password"
               placeholder="Re-enter new password"
+              required
+              maxLength={72}
               disabled={loading}
-              aria-invalid={!!error}
-              aria-describedby={error ? "rp-error" : undefined}
+              aria-invalid={Boolean(fieldErrors.confirm)}
+              aria-describedby={fieldErrors.confirm ? "rp-confirm-error" : undefined}
               className={`w-full rounded-lg border px-3.5 py-2.5 pr-12 text-sm outline-none transition disabled:bg-gray-50 disabled:text-gray-500 ${
-                error
+                fieldErrors.confirm
                   ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
                   : "border-gray-300 focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
               }`}
@@ -157,6 +179,11 @@ export default function ResetPassword() {
               {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
+          {fieldErrors.confirm && (
+            <p id="rp-confirm-error" role="alert" className="mt-1.5 text-sm text-red-600">
+              {fieldErrors.confirm}
+            </p>
+          )}
         </div>
 
         {/* Error banner — red */}
