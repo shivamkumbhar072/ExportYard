@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Send } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -82,6 +82,7 @@ export default function Enquiry() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [submittedAs, setSubmittedAs] = useState("Buyer");
+  const formRef = useRef(null);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -191,7 +192,7 @@ export default function Enquiry() {
     }
 
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    return Object.keys(errors);
   }
 
   function inputClassFor(field) {
@@ -212,7 +213,13 @@ export default function Enquiry() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!validateForm()) return;
+    const invalidFields = validateForm();
+    if (invalidFields.length > 0) {
+      formRef.current
+        ?.querySelector(`[name="${invalidFields[0]}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     if (!token) {
       navigate("/login", {
@@ -329,7 +336,12 @@ export default function Enquiry() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate className="space-y-8">
+              <form
+                ref={formRef}
+                onSubmit={handleSubmit}
+                noValidate
+                className="space-y-8"
+              >
                 <fieldset>
                   <legend className="text-lg font-bold text-[#071c30]">
                     How can we help?

@@ -62,7 +62,13 @@ export const products = [
   {
     title: "Natural Minerals",
     description: "Discuss mineral product requirements and relevant specifications.",
-    image: "/Images/natural-minerals.jpg",
+    image: "/Images/natural-minerals.jpeg",
     category: "Minerals",
+  },
+  {
+    title: "Other Products",
+    description: "Tell us about any product you need beyond the listed categories and we can discuss sourcing options.",
+    image: "/Images/other.jpg",
+    category: "Other products",
   },
 ];

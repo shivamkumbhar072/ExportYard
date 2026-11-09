@@ -4,7 +4,7 @@ import ImageFrame from "./ImageFrame.jsx";
 
 export default function Hero() {
   return (
-    <section className="relative isolate flex min-h-[560px] items-center bg-[#071c30] py-28 text-white sm:min-h-[640px] sm:py-32">
+    <section className="relative isolate flex min-h-[670px] items-center bg-[#071c30] py-28 text-white sm:min-h-[640px] sm:py-32">
       <ImageFrame
         src="/Images/hero-port.jpg"
         alt=""

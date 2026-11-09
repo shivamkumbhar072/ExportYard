@@ -1,51 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNotification } from "../context/useNotification.js";
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(() => window.scrollY > 12);
   const { user, isLoggedIn, logout } = useAuth();
   const notify = useNotification();
   const navigate = useNavigate();
+  const firstName = user?.name?.trim().split(/\s+/)[0] || "there";
+
+  useEffect(() => {
+    function updateScrollState() {
+      setHasScrolled(window.scrollY > 12);
+    }
+
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
 
   function confirmLogout() {
     logout();
     setConfirmOpen(false);
+    setMenuOpen(false);
     notify("You’re logged out.");
     navigate("/", { replace: true });
   }
 
-  const accountActions = (
-    <div className="flex min-w-0 items-center justify-end gap-3 sm:gap-4">
-      {isLoggedIn ? (
-        <>
-          <span className="max-w-[35vw] truncate text-sm text-white/85 sm:max-w-48">
-            Hello, {user?.name || "there"}
-          </span>
-          <button
-            className="shrink-0 rounded border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
-            onClick={() => setConfirmOpen(true)}
-            type="button"
+  function accountActions({ mobile = false } = {}) {
+    return (
+      <div className={`flex min-w-0 items-center gap-3 ${mobile ? "flex-wrap" : ""}`}>
+        {isLoggedIn ? (
+          <>
+            <span className="max-w-[35vw] truncate text-sm text-white/85 sm:max-w-48">
+              Hello, {firstName}
+            </span>
+            <button
+              className="shrink-0 rounded border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+              onClick={() => setConfirmOpen(true)}
+              type="button"
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <Link
+            className="rounded px-2 py-2 text-sm font-medium text-white hover:text-[#e8b85d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+            to="/login"
+            onClick={() => setMenuOpen(false)}
           >
-            Log out
-          </button>
-        </>
-      ) : (
-        <Link
-          className="rounded px-2 py-2 text-sm font-medium text-white hover:text-[#e8b85d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
-          to="/login"
-        >
-          Log in
-        </Link>
-      )}
-    </div>
-  );
+            Log in
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   const pageLinks = (
     <>
       <NavLink
         to="/about"
+        onClick={() => setMenuOpen(false)}
         className={({ isActive }) =>
           `py-1 text-sm font-medium ${
             isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
@@ -58,6 +77,7 @@ export default function Navbar() {
         <NavLink
           to="/admin"
           end
+          onClick={() => setMenuOpen(false)}
           className={({ isActive }) =>
             `py-1 text-sm font-medium ${
               isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
@@ -72,27 +92,55 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#071c30] text-white">
-        <div className="mx-auto flex max-w-[88rem] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:min-h-[72px] sm:flex-nowrap sm:px-6 sm:py-0 lg:px-8">
+      <header
+        className={`fixed inset-x-0 top-0 z-40 border-b text-white transition-colors duration-200 ${
+          hasScrolled || menuOpen
+            ? "border-white/10 bg-[#071c30]"
+            : "border-transparent bg-transparent"
+        }`}
+      >
+        <div className="mx-auto flex min-h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:min-h-[72px] sm:px-6 lg:px-8">
           <Link
             to="/"
             className="shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8b85d]"
             aria-label="ExportYard home"
+            onClick={() => setMenuOpen(false)}
           >
             <img className="h-8 w-auto sm:h-10" src="/Images/logo.png" alt="ExportYard" />
           </Link>
 
-          <div className="order-2 ml-auto flex min-w-0 items-center sm:order-3 sm:ml-0">
-            {accountActions}
+          <div className="hidden items-center gap-8 md:flex">
+            <nav className="flex items-center gap-6" aria-label="Main navigation">
+              {pageLinks}
+            </nav>
+            {accountActions()}
           </div>
 
-          <nav
-            className="order-3 flex w-full items-center gap-6 border-t border-white/15 pt-2 sm:order-2 sm:ml-auto sm:w-auto sm:border-0 sm:pt-0"
-            aria-label="Main navigation"
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded border border-white/25 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d] md:hidden"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-navigation"
           >
-            {pageLinks}
-          </nav>
+            {menuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
         </div>
+
+        {menuOpen && (
+          <div
+            id="mobile-navigation"
+            className="border-t border-white/15 px-5 py-4 md:hidden"
+          >
+            <nav className="flex flex-col items-start gap-4" aria-label="Mobile navigation">
+              {pageLinks}
+            </nav>
+            <div className="mt-4 border-t border-white/15 pt-4">
+              {accountActions({ mobile: true })}
+            </div>
+          </div>
+        )}
       </header>
 
       {confirmOpen && (

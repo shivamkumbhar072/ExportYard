@@ -18,12 +18,6 @@ export default function CTASection({
           </h2>
           <p className="mt-3 leading-7 text-white/70">{description}</p>
         </div>
-        <Link
-          to="/enquiry"
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-md bg-[#d9a441] px-5 py-3 text-sm font-bold text-[#071c30] hover:bg-[#e8b85d] md:self-auto"
-        >
-          Get a Quote <ArrowUpRight size={17} />
-        </Link>
       </div>
     </section>
   );

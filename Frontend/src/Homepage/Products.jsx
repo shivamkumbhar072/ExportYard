@@ -8,7 +8,7 @@ const companyHighlights = [
   {
     title: "Global sourcing",
     description: "We help clarify requirements and explore suitable supply options.",
-    image: "/Images/sourcing.jpg",
+    image: "/Images/sourcing.webp",
   },
   {
     title: "Quality coordination",
@@ -18,7 +18,7 @@ const companyHighlights = [
   {
     title: "Reliable logistics",
     description: "Plan export documentation and shipment coordination together.",
-    image: "/Images/logistics.jpg",
+    image: "/Images/logistics.avif",
   },
 ];
 
@@ -178,7 +178,7 @@ export default function Products() {
             </Link>
           </div>
           <ImageFrame
-            src="/Images/global-shipping.jpg"
+            src="/Images/global-shipping.webp"
             alt="International cargo shipping"
             className="aspect-[16/10] rounded-md border border-white/10"
           />
