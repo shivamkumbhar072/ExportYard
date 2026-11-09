@@ -382,7 +382,7 @@ const css = `
 .pv-page {
   min-height: 100vh;
   padding-bottom: 5rem;
-  background: #071c30;
+  background: #183F35;
   color: #fff;
 }
 
@@ -399,9 +399,9 @@ const css = `
   /* extra top space clears the fixed navbar */
   padding: 8rem 0 3.5rem;
   background:
-    radial-gradient(70rem 30rem at 85% -10%, rgba(56,189,208,.18), transparent 60%),
-    #071c30;
-  border-bottom: 1px solid rgba(56,189,208,.15);
+    radial-gradient(70rem 30rem at 85% -10%, rgba(196,122,69,.18), transparent 60%),
+    #183F35;
+  border-bottom: 1px solid rgba(196,122,69,.2);
 }
 
 .pv-title {
@@ -431,19 +431,19 @@ const css = `
 }
 
 .pv-link {
-  color: #d9a441;
+  color: #e5ae83;
   text-decoration: underline;
   text-underline-offset: 3px;
   overflow-wrap: anywhere;
 }
 
 .pv-link:hover {
-  color: #e8b85d;
+  color: #d99b6b;
 }
 
 .pv-link:focus-visible,
 .pv-contact-mail:focus-visible {
-  outline: 2px solid #ffd9a0;
+  outline: 2px solid #e5ae83;
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -458,7 +458,7 @@ const css = `
 
 .pv-highlight {
   padding: 1.4rem 1.5rem;
-  border: 1px solid rgba(56,189,208,.22);
+  border: 1px solid rgba(196,122,69,.28);
   border-radius: 14px;
   background: rgba(255,255,255,.03);
 }
@@ -467,7 +467,7 @@ const css = `
   margin: 0 0 .45rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #d9a441;
+  color: #e5ae83;
 }
 
 .pv-highlight p {
@@ -503,8 +503,8 @@ const css = `
   border-radius: 50%;
   font-size: .85rem;
   font-weight: 700;
-  color: #10222e;
-  background: #d9a441;
+  color: #1a211d;
+  background: #C47A45;
 }
 
 .pv-row-head h2 {
@@ -537,7 +537,7 @@ const css = `
 }
 
 .pv-row-body li::marker {
-  color: #d9a441;
+  color: #e5ae83;
 }
 
 .pv-row-body li strong {
@@ -553,9 +553,9 @@ const css = `
 .pv-row-google {
   margin: 1.5rem 0;
   padding: 2.5rem 1.25rem;
-  border: 1px solid rgba(56,189,208,.3);
+  border: 1px solid rgba(196,122,69,.32);
   border-radius: 18px;
-  background: linear-gradient(160deg, rgba(56,189,208,.1), rgba(56,189,208,.02));
+  background: linear-gradient(160deg, rgba(196,122,69,.12), rgba(196,122,69,.03));
 }
 
 .pv-blocks {
@@ -567,7 +567,7 @@ const css = `
 
 .pv-block {
   padding: 1.1rem 1.25rem;
-  border-left: 3px solid #d9a441;
+  border-left: 3px solid #C47A45;
   background: rgba(10,22,40,.55);
   border-radius: 0 10px 10px 0;
 }
@@ -608,7 +608,7 @@ const css = `
   margin: 0 0 .4rem;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #e8b85d;
+  color: #e5ae83;
 }
 
 .pv-contact p {
@@ -623,13 +623,13 @@ const css = `
   font-weight: 600;
   color: #fff;
   text-decoration: underline;
-  text-decoration-color: #e8b85d;
+  text-decoration-color: #e5ae83;
   text-underline-offset: 4px;
   overflow-wrap: anywhere;
 }
 
 .pv-contact-mail:hover {
-  color: #e8b85d;
+  color: #e5ae83;
 }
 
 @keyframes pv-rise {

@@ -30,7 +30,7 @@ export default function ProductCatalog() {
   }, [category, query]);
 
   return (
-    <main className="bg-white text-[#172536]">
+    <main className="bg-[#F7F5EF] text-[#252b27]">
       <PageHero
         eyebrow="Our products"
         title="Explore sourcing categories."
@@ -46,7 +46,7 @@ export default function ProductCatalog() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search product categories"
-                className="w-full rounded-md border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#d9a441] focus:ring-2 focus:ring-[#d9a441]/20"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#C47A45] focus:ring-2 focus:ring-[#C47A45]/20"
               />
             </label>
             <label>
@@ -54,7 +54,7 @@ export default function ProductCatalog() {
               <select
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#d9a441] focus:ring-2 focus:ring-[#d9a441]/20 sm:min-w-56"
+                className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-[#C47A45] focus:ring-2 focus:ring-[#C47A45]/20 sm:min-w-56"
               >
                 {categories.map((option) => (
                   <option key={option} value={option}>
@@ -64,7 +64,7 @@ export default function ProductCatalog() {
               </select>
             </label>
           </div>
-          <p className="mt-4 text-sm text-[#4b5563]" aria-live="polite">
+          <p className="mt-4 text-sm text-[#59655d]" aria-live="polite">
             {filteredProducts.length} product categories
           </p>
           {filteredProducts.length ? (
@@ -74,7 +74,7 @@ export default function ProductCatalog() {
               ))}
             </div>
           ) : (
-            <p className="mt-8 rounded-md bg-[#f5f6f7] p-6 text-sm text-[#4b5563]">
+            <p className="mt-8 rounded-md bg-[#F7F5EF] p-6 text-sm text-[#59655d]">
               No categories match your search. Try another term or send us a
               custom product enquiry.
             </p>

@@ -43,11 +43,11 @@ function StatCard({ label, value, note, icon: Icon }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-600">{label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight text-[#071c30] sm:text-4xl">
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-[#183F35] sm:text-4xl">
             {value}
           </p>
         </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#f7f1e4] text-[#8b641f]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#F7F5EF] text-[#854a31]">
           <Icon size={19} aria-hidden="true" />
         </span>
       </div>
@@ -131,8 +131,8 @@ export default function AdminDashboard() {
     <div className="mx-auto max-w-7xl space-y-7 sm:space-y-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-[#8b641f]">Overview</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#071c30] sm:text-3xl">
+          <p className="text-sm font-medium text-[#854a31]">Overview</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#183F35] sm:text-3xl">
             Dashboard
           </h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
           type="button"
           onClick={refreshDashboard}
           disabled={loading}
-          className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-[#172536] transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f] disabled:cursor-wait disabled:opacity-60 sm:self-auto"
+          className="inline-flex min-h-10 items-center justify-center gap-2 self-start rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-[#252b27] transition hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C47A45] disabled:cursor-wait disabled:opacity-60 sm:self-auto"
         >
           <RefreshCw
             size={16}
@@ -190,14 +190,14 @@ export default function AdminDashboard() {
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-5">
             <div>
-              <h3 className="font-semibold text-[#071c30]">Recent enquiries</h3>
+              <h3 className="font-semibold text-[#183F35]">Recent enquiries</h3>
               <p className="mt-1 text-sm text-slate-500">
                 The latest buyer and supplier requests.
               </p>
             </div>
             <Link
               to="/admin/enquiries"
-              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#765111] hover:text-[#071c30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f]"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#854a31] hover:text-[#183F35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C47A45]"
             >
               All enquiries <ArrowRight size={15} aria-hidden="true" />
             </Link>
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
                         <MessageSquare size={16} aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-medium text-[#172536]">
+                        <p className="truncate font-medium text-[#252b27]">
                           {enquiry.productName || "Product enquiry"}
                         </p>
                         <p className="mt-1 truncate text-sm text-slate-500">
@@ -261,14 +261,14 @@ export default function AdminDashboard() {
         <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-5">
             <div>
-              <h3 className="font-semibold text-[#071c30]">New accounts</h3>
+              <h3 className="font-semibold text-[#183F35]">New accounts</h3>
               <p className="mt-1 text-sm text-slate-500">
                 The latest registered users.
               </p>
             </div>
             <Link
               to="/admin/users"
-              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#765111] hover:text-[#071c30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b641f]"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#854a31] hover:text-[#183F35] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C47A45]"
             >
               All users <ArrowRight size={15} aria-hidden="true" />
             </Link>
@@ -289,11 +289,11 @@ export default function AdminDashboard() {
                   key={user._id}
                   className="flex min-w-0 items-center gap-3 px-4 py-3.5 sm:px-5"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f7f1e4] text-sm font-semibold text-[#765111]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7F5EF] text-sm font-semibold text-[#854a31]">
                     {(user.name || "?").charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#172536]">
+                    <p className="truncate text-sm font-medium text-[#252b27]">
                       {user.name || "Unnamed account"}
                     </p>
                     <p className="truncate text-xs text-slate-500">

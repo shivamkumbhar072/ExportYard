@@ -40,7 +40,7 @@ export default function Navbar() {
               Hello, {firstName}
             </span>
             <button
-              className="shrink-0 rounded border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+              className="shrink-0 rounded border border-white/30 px-3 py-2 text-sm font-medium text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e5ae83]"
               onClick={() => setConfirmOpen(true)}
               type="button"
             >
@@ -49,7 +49,7 @@ export default function Navbar() {
           </>
         ) : (
           <Link
-            className="rounded px-2 py-2 text-sm font-medium text-white hover:text-[#e8b85d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d]"
+            className="rounded px-2 py-2 text-sm font-medium text-white hover:text-[#e5ae83] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e5ae83]"
             to="/login"
             onClick={() => setMenuOpen(false)}
           >
@@ -67,7 +67,7 @@ export default function Navbar() {
         onClick={() => setMenuOpen(false)}
         className={({ isActive }) =>
           `py-1 text-sm font-medium ${
-            isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
+            isActive ? "text-[#e5ae83]" : "text-white/85 hover:text-white"
           }`
         }
       >
@@ -80,7 +80,7 @@ export default function Navbar() {
           onClick={() => setMenuOpen(false)}
           className={({ isActive }) =>
             `py-1 text-sm font-medium ${
-              isActive ? "text-[#e8b85d]" : "text-white/85 hover:text-white"
+              isActive ? "text-[#e5ae83]" : "text-white/85 hover:text-white"
             }`
           }
         >
@@ -95,14 +95,14 @@ export default function Navbar() {
       <header
         className={`fixed inset-x-0 top-0 z-40 border-b text-white transition-colors duration-200 ${
           hasScrolled || menuOpen
-            ? "border-white/10 bg-[#071c30]"
+            ? "border-white/10 bg-[#183F35]"
             : "border-transparent bg-transparent"
         }`}
       >
         <div className="mx-auto flex min-h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:min-h-[72px] sm:px-6 lg:px-8">
           <Link
             to="/"
-            className="shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8b85d]"
+            className="shrink-0 rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e5ae83]"
             aria-label="ExportYard home"
             onClick={() => setMenuOpen(false)}
           >
@@ -118,7 +118,7 @@ export default function Navbar() {
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded border border-white/25 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d] md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded border border-white/25 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e5ae83] md:hidden"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
@@ -145,14 +145,14 @@ export default function Navbar() {
 
       {confirmOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#071c30]/70 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#102b24]/70 p-4"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setConfirmOpen(false);
           }}
         >
           <section
-            className="w-full max-w-sm rounded-lg bg-white p-6 text-[#172536] shadow-xl"
+            className="w-full max-w-sm rounded-lg bg-white p-6 text-[#252b27] shadow-xl"
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="logout-title"
@@ -173,7 +173,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={confirmLogout}
-                className="rounded bg-[#071c30] px-4 py-2 text-sm font-semibold text-white hover:bg-[#102b43]"
+                className="rounded bg-[#183F35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#102b24]"
               >
                 Log out
               </button>

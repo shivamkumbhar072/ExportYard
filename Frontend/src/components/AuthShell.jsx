@@ -28,8 +28,8 @@ const css = `
   position: relative;
   box-sizing: border-box;
   padding: 6rem 1rem 3rem;
-  background: #f5f6f7;
-  color: #172536;
+  background: #F7F5EF;
+  color: #252b27;
 }
 .au-brand {
   position: absolute;
@@ -42,7 +42,7 @@ const css = `
   height: 2.5rem;
 }
 .au-brand:focus-visible {
-  outline: 2px solid #d9a441;
+  outline: 2px solid #C47A45;
   outline-offset: 4px;
 }
 .au-card {
@@ -50,16 +50,16 @@ const css = `
   max-width: 430px;
   box-sizing: border-box;
   padding: clamp(1.5rem, 5vw, 2.25rem);
-  border: 1px solid #e1e5e9;
-  border-top: 3px solid #d9a441;
+  border: 1px solid #e7dfd1;
+  border-top: 3px solid #C47A45;
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 18px 48px -32px rgba(7,28,48,.35);
+  background: #fffdf7;
+  box-shadow: 0 18px 48px -32px rgba(24,63,53,.22);
 }
 .au-eyebrow {
   display: block;
   margin-bottom: .65rem;
-  color: #8b5e0b;
+  color: #854a31;
   font-size: .7rem;
   font-weight: 700;
   letter-spacing: .16em;
@@ -67,7 +67,7 @@ const css = `
 }
 .au-card h1 {
   margin: 0;
-  color: #071c30;
+  color: #183F35;
   font-size: clamp(1.8rem, 6vw, 2.25rem);
   font-weight: 750;
   letter-spacing: -.035em;
@@ -76,24 +76,24 @@ const css = `
 }
 .au-sub {
   margin: .65rem 0 1.4rem;
-  color: #4b5563;
+  color: #59655d;
   font-size: .95rem;
   line-height: 1.55;
 }
 .au-card button[type="submit"] {
-  background: #d9a441 !important;
-  color: #071c30 !important;
+  background: #C47A45 !important;
+  color: #1a211d !important;
   font-weight: 700 !important;
 }
 .au-card button[type="submit"]:hover:not(:disabled) {
-  background: #e8b85d !important;
+  background: #d99b6b !important;
 }
 .au-card a {
-  color: #8b5e0b;
+  color: #854a31;
 }
 .au-foot {
   margin: 1.25rem 0 0;
-  color: #4b5563;
+  color: #59655d;
   font-size: .875rem;
   text-align: center;
 }

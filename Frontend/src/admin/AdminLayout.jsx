@@ -30,7 +30,7 @@ export default function AdminLayout() {
 
   if (authLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f5f6f7] px-4 text-sm text-slate-600">
+      <main className="flex min-h-screen items-center justify-center bg-[#F7F5EF] px-4 text-sm text-slate-600">
         Verifying admin access…
       </main>
     );
@@ -45,10 +45,10 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f6f7] text-[#172536]">
-      <section className="border-b border-white/10 bg-[#071c30] px-4 pb-5 pt-24 text-white sm:px-6 sm:pb-6 lg:px-8">
+    <div className="flex min-h-screen flex-col bg-[#F7F5EF] text-[#252b27]">
+      <section className="border-b border-white/10 bg-[#183F35] px-4 pb-5 pt-24 text-white sm:px-6 sm:pb-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e8b85d]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e5ae83]">
             ExportYard administration
           </p>
           <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
@@ -68,9 +68,9 @@ export default function AdminLayout() {
                 to={path}
                 end={end}
                 className={({ isActive }) =>
-                  `inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8b85d] sm:px-4 ${
+                  `inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e5ae83] sm:px-4 ${
                     isActive
-                      ? "bg-[#e8b85d] text-[#071c30]"
+                      ? "bg-[#C47A45] text-[#1a211d]"
                       : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`
                 }

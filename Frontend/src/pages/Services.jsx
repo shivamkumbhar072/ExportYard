@@ -12,7 +12,7 @@ export default function Services() {
   );
 
   return (
-    <main className="bg-white text-[#172536]">
+    <main className="bg-[#F7F5EF] text-[#252b27]">
       <PageHero
         eyebrow="Our services"
         title="Practical support for international trade."
@@ -30,14 +30,14 @@ export default function Services() {
               />
             ))}
           </div>
-          <div className="mt-12 rounded-lg bg-[#f5f6f7] p-6 sm:p-8">
+          <div className="mt-12 rounded-lg bg-[#F7F5EF] p-6 sm:p-8">
             <h2 className="text-2xl font-bold">Service details depend on your trade.</h2>
-            <p className="mt-3 max-w-3xl leading-7 text-[#4b5563]">
+            <p className="mt-3 max-w-3xl leading-7 text-[#59655d]">
               The product, destination and parties involved determine the
               requirements for each transaction. We discuss the scope and
               responsibilities with you before any service is confirmed.
             </p>
-            <Link to="/enquiry" className="mt-5 inline-flex font-bold text-[#8b5e0b]">
+            <Link to="/enquiry" className="mt-5 inline-flex font-bold text-[#854a31]">
               Discuss your requirements <span className="ml-2" aria-hidden="true">→</span>
             </Link>
           </div>

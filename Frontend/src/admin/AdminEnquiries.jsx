@@ -27,7 +27,7 @@ const STATUSES = [
 ];
 
 const STATUS_STYLES = {
-  new: "bg-[#38bdd0]/15 text-[#0b5f6e] border-[#38bdd0]/40",
+  new: "bg-[#C47A45]/15 text-[#653b2b] border-[#C47A45]/40",
   contacted: "bg-sky-100 text-sky-800 border-sky-200",
   quoted: "bg-amber-100 text-amber-800 border-amber-200",
   negotiating: "bg-orange-100 text-orange-800 border-orange-200",
@@ -38,12 +38,12 @@ const STATUS_STYLES = {
 const pillButton =
   "inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold tracking-[0.08em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40";
 
-const peachButton = `${pillButton} bg-[#ffc58f] text-[#10222e] hover:-translate-y-px hover:bg-[#ffd7b0] focus-visible:outline-[#0a1628] disabled:hover:translate-y-0`;
+const peachButton = `${pillButton} bg-[#C47A45] text-[#1a211d] hover:-translate-y-px hover:bg-[#d99b6b] focus-visible:outline-[#183F35] disabled:hover:translate-y-0`;
 
-const outlineButton = `${pillButton} border border-[#0a1628]/25 text-[#0a1628] hover:border-[#0a1628] hover:bg-[#0a1628]/5 focus-visible:outline-[#38bdd0] disabled:hover:bg-transparent`;
+const outlineButton = `${pillButton} border border-[#183F35]/25 text-[#183F35] hover:border-[#183F35] hover:bg-[#183F35]/5 focus-visible:outline-[#C47A45] disabled:hover:bg-transparent`;
 
 const iconButton =
-  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#0a1628]/20 text-[#0a1628] transition hover:border-[#0a1628] hover:bg-[#0a1628]/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#38bdd0]";
+  "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#183F35]/20 text-[#183F35] transition hover:border-[#183F35] hover:bg-[#183F35]/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C47A45]";
 
 function formatDate(date, withTime = false) {
   if (!date) return "—";
@@ -266,10 +266,10 @@ export default function AdminEnquiries() {
       {/* Heading */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#0e7f91]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#854a31]">
             Sales workspace
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#0a1628]">
+          <h1 className="text-3xl font-bold tracking-tight text-[#183F35]">
             Trade enquiries
           </h1>
           <p className="mt-2 text-sm text-slate-600">
@@ -303,7 +303,7 @@ export default function AdminEnquiries() {
             }}
             placeholder="Search contact, company, product or country..."
             aria-label="Search enquiries"
-            className="w-full rounded-full border border-[#0a1628]/20 bg-white py-2.5 pl-11 pr-4 text-sm text-[#0a1628] outline-none transition placeholder:text-slate-400 focus:border-[#38bdd0] focus:ring-2 focus:ring-[#38bdd0]/25"
+            className="w-full rounded-full border border-[#183F35]/20 bg-white py-2.5 pl-11 pr-4 text-sm text-[#252b27] outline-none transition placeholder:text-slate-400 focus:border-[#C47A45] focus:ring-2 focus:ring-[#C47A45]/25"
           />
         </label>
 
@@ -314,7 +314,7 @@ export default function AdminEnquiries() {
             setPage(1);
           }}
           aria-label="Filter by status"
-          className="rounded-full border border-[#0a1628]/20 bg-white px-5 py-2.5 text-sm text-[#0a1628] outline-none transition focus:border-[#38bdd0] focus:ring-2 focus:ring-[#38bdd0]/25 sm:w-48"
+          className="rounded-full border border-[#183F35]/20 bg-white px-5 py-2.5 text-sm text-[#252b27] outline-none transition focus:border-[#C47A45] focus:ring-2 focus:ring-[#C47A45]/25 sm:w-48"
         >
           <option value="">All statuses</option>
           {STATUSES.map((status) => (
@@ -336,9 +336,9 @@ export default function AdminEnquiries() {
       )}
 
       {/* Table panel */}
-      <section className="overflow-hidden rounded-2xl border border-[#0a1628]/10 bg-white shadow-sm">
-        <div className="border-b border-[#38bdd0]/20 px-6 py-5">
-          <h2 className="font-semibold text-[#0a1628]">All enquiries</h2>
+      <section className="overflow-hidden rounded-2xl border border-[#183F35]/10 bg-white shadow-sm">
+        <div className="border-b border-[#C47A45]/20 px-6 py-5">
+          <h2 className="font-semibold text-[#183F35]">All enquiries</h2>
           <p className="mt-1 text-sm text-slate-600">
             {loading ? "Loading enquiries..." : `${pagination.total} enquiries found`}
           </p>
@@ -350,8 +350,8 @@ export default function AdminEnquiries() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center gap-1 px-6 py-14 text-center">
-            <MessageCircle size={28} className="mb-2 text-[#38bdd0]/60" />
-            <strong className="font-medium text-[#0a1628]">
+            <MessageCircle size={28} className="mb-2 text-[#C47A45]/70" />
+            <strong className="font-medium text-[#183F35]">
               No matching enquiries
             </strong>
             <span className="text-sm text-slate-500">
@@ -361,7 +361,7 @@ export default function AdminEnquiries() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#0a1628] text-xs uppercase tracking-wide text-white/80">
+              <thead className="bg-[#183F35] text-xs uppercase tracking-wide text-white/80">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Submitted by</th>
                   <th className="px-6 py-4 font-semibold">Contact</th>
@@ -377,10 +377,10 @@ export default function AdminEnquiries() {
                 {items.map((item) => (
                   <tr
                     key={item._id}
-                    className="transition hover:bg-[#38bdd0]/5"
+                    className="transition hover:bg-[#C47A45]/5"
                   >
                     <td className="whitespace-nowrap px-6 py-4">
-                      <strong className="block font-medium text-[#0a1628]">
+                      <strong className="block font-medium text-[#183F35]">
                         {item.submittedBy?.name || "No linked account"}
                       </strong>
                       <span className="mt-0.5 block text-xs text-slate-500">
@@ -389,7 +389,7 @@ export default function AdminEnquiries() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <strong className="block font-medium text-[#0a1628]">
+                      <strong className="block font-medium text-[#183F35]">
                         {item.name}
                       </strong>
                       <span className="mt-0.5 block text-xs text-slate-500">
@@ -402,7 +402,7 @@ export default function AdminEnquiries() {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4">
-                      <strong className="block font-medium text-[#0a1628]">
+                      <strong className="block font-medium text-[#183F35]">
                         {item.productName || item.bottleSize || "Product enquiry"}
                       </strong>
                       <span className="mt-0.5 block text-xs text-slate-500">
@@ -421,7 +421,7 @@ export default function AdminEnquiries() {
                           updateStatus(item._id, event.target.value)
                         }
                         aria-label={`Update status for ${item.name}`}
-                        className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[#38bdd0]/40 disabled:cursor-wait disabled:opacity-60 ${
+                        className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[#C47A45]/40 disabled:cursor-wait disabled:opacity-60 ${
                           STATUS_STYLES[item.status?.toLowerCase()] ||
                           STATUS_STYLES.closed
                         }`}
@@ -480,7 +480,7 @@ export default function AdminEnquiries() {
         )}
 
         {/* Pagination */}
-        <div className="flex flex-col gap-3 border-t border-[#38bdd0]/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex flex-col gap-3 border-t border-[#C47A45]/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="text-sm text-slate-600">
             Page {page} of {Math.max(1, totalPages)}
           </p>
@@ -511,19 +511,19 @@ export default function AdminEnquiries() {
       {/* Detail dialog */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#050c18]/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#102b24]/70 p-4 backdrop-blur-sm"
           onMouseDown={() => setSelected(null)}
         >
           <section
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#38bdd0]/25 bg-white shadow-2xl"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#C47A45]/25 bg-white shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="enquiry-detail-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <header className="flex items-start justify-between gap-4 bg-[#0a1628] px-6 py-5 text-white">
+            <header className="flex items-start justify-between gap-4 bg-[#183F35] px-6 py-5 text-white">
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#38bdd0]">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#e5ae83]">
                   Enquiry details
                 </p>
                 <h2 id="enquiry-detail-title" className="text-xl font-bold">
@@ -534,7 +534,7 @@ export default function AdminEnquiries() {
                 type="button"
                 onClick={() => setSelected(null)}
                 aria-label="Close details"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white/70 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd9a0]"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white/70 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e5ae83]"
               >
                 <X size={18} />
               </button>
@@ -576,14 +576,14 @@ export default function AdminEnquiries() {
                     <dt className="text-xs font-medium text-slate-500">
                       {label}
                     </dt>
-                    <dd className="mt-1 break-words text-sm font-semibold text-[#0a1628]">
+                    <dd className="mt-1 break-words text-sm font-semibold text-[#183F35]">
                       {value}
                     </dd>
                   </div>
                 ))}
               </dl>
 
-              <div className="rounded-xl border border-[#0a1628]/10 bg-slate-50 p-4">
+              <div className="rounded-xl border border-[#183F35]/10 bg-slate-50 p-4">
                 <p className="text-xs font-medium text-slate-500">
                   Requirements and message
                 </p>
@@ -629,7 +629,7 @@ export default function AdminEnquiries() {
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#050c18]/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#102b24]/70 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget && !deletingId) {
               setDeleteTarget(null);
@@ -643,7 +643,7 @@ export default function AdminEnquiries() {
             aria-labelledby="delete-enquiry-title"
             aria-describedby="delete-enquiry-description"
           >
-            <h2 id="delete-enquiry-title" className="text-xl font-bold text-[#0a1628]">
+            <h2 id="delete-enquiry-title" className="text-xl font-bold text-[#183F35]">
               Delete this enquiry?
             </h2>
             <p id="delete-enquiry-description" className="mt-3 text-sm leading-6 text-slate-600">

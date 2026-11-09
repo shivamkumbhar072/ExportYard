@@ -270,7 +270,7 @@ const css = `
 .tc-page {
   min-height: 100vh;
   padding-bottom: 5rem;
-  background: #071c30;
+  background: #183F35;
   color: #fff;
 }
 
@@ -287,9 +287,9 @@ const css = `
   /* extra top space clears the fixed navbar */
   padding: 8rem 0 3.5rem;
   background:
-    radial-gradient(70rem 30rem at 85% -10%, rgba(56,189,208,.18), transparent 60%),
-    #071c30;
-  border-bottom: 1px solid rgba(56,189,208,.15);
+    radial-gradient(70rem 30rem at 85% -10%, rgba(196,122,69,.18), transparent 60%),
+    #183F35;
+  border-bottom: 1px solid rgba(196,122,69,.2);
 }
 
 .tc-title {
@@ -319,18 +319,18 @@ const css = `
 }
 
 .tc-link {
-  color: #d9a441;
+  color: #e5ae83;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .tc-link:hover {
-  color: #e8b85d;
+  color: #d99b6b;
 }
 
 .tc-link:focus-visible,
 .tc-contact-mail:focus-visible {
-  outline: 2px solid #ffd9a0;
+  outline: 2px solid #e5ae83;
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -345,7 +345,7 @@ const css = `
 
 .tc-highlight {
   padding: 1.4rem 1.5rem;
-  border: 1px solid rgba(56,189,208,.22);
+  border: 1px solid rgba(196,122,69,.28);
   border-radius: 14px;
   background: rgba(255,255,255,.03);
 }
@@ -354,7 +354,7 @@ const css = `
   margin: 0 0 .45rem;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #d9a441;
+  color: #e5ae83;
 }
 
 .tc-highlight p {
@@ -390,8 +390,8 @@ const css = `
   border-radius: 50%;
   font-size: .85rem;
   font-weight: 700;
-  color: #10222e;
-  background: #d9a441;
+  color: #1a211d;
+  background: #C47A45;
 }
 
 .tc-row-head h2 {
@@ -424,7 +424,7 @@ const css = `
 }
 
 .tc-row-body li::marker {
-  color: #d9a441;
+  color: #e5ae83;
 }
 
 .tc-row-body li strong {
@@ -452,7 +452,7 @@ const css = `
   margin: 0 0 .4rem;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #e8b85d;
+  color: #e5ae83;
 }
 
 .tc-contact p {
@@ -467,13 +467,13 @@ const css = `
   font-weight: 600;
   color: #fff;
   text-decoration: underline;
-  text-decoration-color: #e8b85d;
+  text-decoration-color: #e5ae83;
   text-underline-offset: 4px;
   overflow-wrap: anywhere;
 }
 
 .tc-contact-mail:hover {
-  color: #e8b85d;
+  color: #e5ae83;
 }
 
 @keyframes tc-rise {

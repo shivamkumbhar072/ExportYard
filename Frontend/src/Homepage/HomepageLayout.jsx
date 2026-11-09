@@ -4,8 +4,8 @@ import usePageMeta from "../hooks/usePageMeta.js";
 
 const HomepageLayout = () => {
   usePageMeta(
-    "ExportYard | Global Sourcing and Exports from India",
-    "Connect with ExportYard for product sourcing, supplier coordination and export support from India."
+    "ExportYard | Source Quality Products from India",
+    "Find Indian suppliers for spices, rice, minerals and more. ExportYard helps international buyers clarify product needs and coordinate sourcing, export documents and shipping."
   );
 
   return (

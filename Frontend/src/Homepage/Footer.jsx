@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 const Footer = () => (
-  <footer className="bg-[#071c30] text-white">
+  <footer className="bg-[#183F35] text-white">
     <div className="mx-auto grid max-w-[88rem] gap-10 px-5 py-12 sm:px-8 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-12 lg:py-16">
       <div>
         <Link to="/" className="inline-flex" aria-label="ExportYard home">
@@ -12,14 +12,14 @@ const Footer = () => (
           sourcing conversations and export coordination.
         </p>
         <a
-          className="mt-4 inline-block text-sm font-semibold text-[#e8b85d] hover:text-white"
+          className="mt-4 inline-block text-sm font-semibold text-[#e5ae83] hover:text-white"
           href="mailto:contact@exportyard.com"
         >
           contact@exportyard.com
         </a>
         <p className="mt-6 text-sm text-white/75">Have a product in mind?</p>
         <Link
-          className="mt-2 inline-flex rounded-md bg-[#d9a441] px-4 py-2.5 text-sm font-semibold text-[#071c30] hover:bg-[#e8b85d]"
+          className="mt-2 inline-flex rounded-md bg-[#C47A45] px-4 py-2.5 text-sm font-semibold text-[#1a211d] transition-colors hover:bg-[#d99b6b]"
           to="/enquiry"
         >
           Request a Quote
@@ -66,10 +66,10 @@ const Footer = () => (
       }
       .footer-link:hover,
       .footer-link:focus-visible {
-        color: #e8b85d;
+        color: #e5ae83;
       }
       .footer-link:focus-visible {
-        outline: 2px solid #e8b85d;
+        outline: 2px solid #e5ae83;
         outline-offset: 3px;
       }
     `}</style>
