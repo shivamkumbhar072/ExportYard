@@ -4,9 +4,6 @@ export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className="au-page">
       <style>{css}</style>
-      <Link to="/" className="au-brand" aria-label="ExportYard home">
-        <img src="/Images/logo.png" alt="ExportYard" />
-      </Link>
       <main className="au-card">
         <span className="au-eyebrow">ExportYard account</span>
         <h1>{title}</h1>
