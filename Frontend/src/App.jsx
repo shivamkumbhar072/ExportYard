@@ -35,9 +35,15 @@ import ScrollManager from "./components/ScrollManager.jsx";
 
 // Shared layout
 function MainLayout() {
+  const location = useLocation();
+
+  const hideNavbar =
+    location.pathname === "/login" ||
+    location.pathname === "/register";
+
   return (
     <div className="app-layout">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
 
       <main className="app-main-content">
         <Outlet />
